@@ -1,0 +1,44 @@
+Sub GetJavaFileNames()
+    Dim folderPath As String
+    Dim rowIndex As Long
+    
+    ' Prompt the user to select a folder
+    With Application.FileDialog(msoFileDialogFolderPicker)
+        .Title = "Select Folder"
+        .Show
+        If .SelectedItems.Count = 0 Then Exit Sub
+        folderPath = .SelectedItems(1)
+    End With
+    
+    ' Clear previous data in column A
+    Columns(1).ClearContents
+    
+    ' Start populating file names in column A
+    rowIndex = 1
+    GetJavaFiles folderPath, rowIndex
+    
+    MsgBox "File names retrieved successfully.", vbInformation
+End Sub
+
+Sub GetJavaFiles(ByVal folderPath As String, ByRef rowIndex As Long)
+    Dim folder As Object
+    Dim subFolder As Object
+    Dim file As Object
+    
+    ' Create a reference to the FileSystemObject
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set folder = fso.GetFolder(folderPath)
+    
+    ' Loop through each file in the folder
+    For Each file In folder.Files
+        If LCase(Right(file.Name, 5)) = ".java" Then
+            Cells(rowIndex, 1).Value = file.Path
+            rowIndex = rowIndex + 1
+        End If
+    Next file
+    
+    ' Recursively call the function for each subfolder
+    For Each subFolder In folder.SubFolders
+        GetJavaFiles subFolder.Path, rowIndex
+    Next subFolder
+End Sub

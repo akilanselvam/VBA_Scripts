@@ -1,0 +1,62 @@
+Sub CompareSheets()
+    Dim sourceSheet As Worksheet
+    Dim targetSheet As Worksheet
+    Dim sourceLastRow As Long
+    Dim targetLastRow As Long
+    Dim sourceRange As Range
+    Dim targetRange As Range
+    Dim sourceCell As Range
+    Dim targetCell As Range
+    Dim targetSheetName As String
+    Dim found As Boolean
+    
+    ' Set the source sheet
+    Set sourceSheet = ThisWorkbook.Sheets("Source")
+    
+    ' Get the last row in the source sheet column A
+    sourceLastRow = sourceSheet.Cells(sourceSheet.Rows.Count, "A").End(xlUp).Row
+    
+    ' Define the source range
+    Set sourceRange = sourceSheet.Range("A1:A" & sourceLastRow)
+    
+    ' Loop through each cell in the source range
+    For Each sourceCell In sourceRange
+        ' Clear the previous values in the source sheet column B
+        sourceCell.Offset(0, 1).ClearContents
+        
+        ' Loop through each sheet except the source sheet
+        For Each targetSheet In ThisWorkbook.Sheets
+            If targetSheet.Name <> sourceSheet.Name Then
+                ' Get the last row in the target sheet column A
+                targetLastRow = targetSheet.Cells(targetSheet.Rows.Count, "A").End(xlUp).Row
+                
+                ' Define the target range
+                Set targetRange = targetSheet.Range("A1:A" & targetLastRow)
+                
+                ' Check if the source cell value exists in the target range
+                found = False
+                
+                For Each targetCell In targetRange
+                    If targetCell.Value = sourceCell.Value Then
+                        found = True
+                        Exit For
+                    End If
+                Next targetCell
+                
+                If found Then
+                    ' Add the target sheet name to the source sheet column B
+                    targetSheetName = targetSheet.Name
+                    sourceCell.Offset(0, 1).Value = sourceCell.Offset(0, 1).Value & targetSheetName & ","
+                End If
+            End If
+        Next targetSheet
+        
+        ' Remove the trailing comma from the source sheet column B
+        If Len(sourceCell.Offset(0, 1).Value) > 0 Then
+            sourceCell.Offset(0, 1).Value = Left(sourceCell.Offset(0, 1).Value, Len(sourceCell.Offset(0, 1).Value) - 1)
+        End If
+    Next sourceCell
+    
+    MsgBox "Comparison completed successfully.", vbInformation
+End Sub
+
