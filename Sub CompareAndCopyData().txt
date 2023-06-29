@@ -1,0 +1,50 @@
+Sub CompareAndCopyData()
+    Dim sourceSheet As Worksheet
+    Dim anotherSheet As Worksheet
+    Dim sourceLastRow As Long
+    Dim anotherLastRow As Long
+    Dim sourceRange As Range
+    Dim anotherRange As Range
+    Dim sourceCell As Range
+    Dim anotherCell As Range
+    Dim targetCell As Range
+    
+    ' Set the source and another sheets
+    Set sourceSheet = ThisWorkbook.Sheets("Source")
+    Set anotherSheet = ThisWorkbook.Sheets("Destination")
+    
+    ' Find the last row in each sheet
+    sourceLastRow = sourceSheet.Cells(sourceSheet.Rows.Count, "B").End(xlUp).Row
+    anotherLastRow = anotherSheet.Cells(anotherSheet.Rows.Count, "B").End(xlUp).Row
+    
+    ' Set the ranges to compare
+    Set sourceRange = sourceSheet.Range("B2:B" & sourceLastRow) ' Assuming data starts from row 2
+    Set anotherRange = anotherSheet.Range("B2:B" & anotherLastRow) ' Assuming data starts from row 2
+    
+    ' Loop through each cell in the source range
+    For Each sourceCell In sourceRange
+        ' Loop through each cell in the another range
+        For Each anotherCell In anotherRange
+            ' Compare the values in the two cells
+            If sourceCell.Value = anotherCell.Value Then
+                ' Copy the corresponding data to the target cells
+                Set targetCell = sourceSheet.Cells(sourceCell.Row, "C")
+                targetCell.Value = anotherSheet.Cells(anotherCell.Row, "A").Value
+                targetCell.Offset(0, 1).Value = anotherSheet.Name
+                Exit For ' Exit the loop if a match is found
+            End If
+        Next anotherCell
+    Next sourceCell
+    
+    ' Clean up
+    Set sourceSheet = Nothing
+    Set anotherSheet = Nothing
+    Set sourceRange = Nothing
+    Set anotherRange = Nothing
+    Set sourceCell = Nothing
+    Set anotherCell = Nothing
+    Set targetCell = Nothing
+    
+    MsgBox "Data comparison and copying completed."
+End Sub
+

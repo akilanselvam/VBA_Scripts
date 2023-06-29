@@ -1,0 +1,41 @@
+Sub ExtractJavaFileNames()
+    Dim lastRow As Long
+    Dim sourceRange As Range
+    Dim sourceCell As Range
+    Dim fileName As String
+    
+    ' Set the source range in column A
+    With ThisWorkbook.Sheets("Sheet1") ' Replace "Sheet1" with your sheet name
+        lastRow = .Cells(.Rows.Count, "A").End(xlUp).Row
+        Set sourceRange = .Range("A1:A" & lastRow)
+    End With
+    
+    ' Loop through each cell in the source range
+    For Each sourceCell In sourceRange
+        ' Extract the Java file name from the path
+        fileName = GetJavaFileName(sourceCell.Value)
+        
+        ' Add the file name to column B
+        sourceCell.Offset(0, 1).Value = fileName
+    Next sourceCell
+    
+    MsgBox "Java file names extracted successfully.", vbInformation
+End Sub
+
+Function GetJavaFileName(ByVal path As String) As String
+    Dim fileName As String
+    Dim lastIndex As Integer
+    
+    ' Find the last occurrence of the backslash (\) in the path
+    lastIndex = InStrRev(path, "\")
+    
+    ' Extract the file name from the path
+    If lastIndex > 0 Then
+        fileName = Mid(path, lastIndex + 1)
+    Else
+        fileName = path
+    End If
+    
+    GetJavaFileName = fileName
+End Function
+
