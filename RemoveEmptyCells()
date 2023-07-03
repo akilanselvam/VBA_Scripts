@@ -1,0 +1,26 @@
+Sub RemoveEmptyCells()
+    Dim sheet5 As Worksheet
+    Dim lastRow As Long
+    Dim rng As Range
+    Dim cell As Range
+    
+    ' Set the worksheet (Sheet5)
+    Set sheet5 = ThisWorkbook.Worksheets("Sheet5")
+    
+    ' Get the last used row in Column A of Sheet5
+    lastRow = sheet5.Cells(sheet5.Rows.Count, "A").End(xlUp).Row
+    
+    ' Set the range of cells in Column A
+    Set rng = sheet5.Range("A1:A" & lastRow)
+    
+    ' Loop through each cell in the range
+    For Each cell In rng
+        ' Check if the cell is empty
+        If IsEmpty(cell) Then
+            ' Delete the entire row
+            cell.EntireRow.Delete
+        End If
+    Next cell
+    
+    MsgBox "Empty cells removed successfully!", vbInformation
+End Sub
