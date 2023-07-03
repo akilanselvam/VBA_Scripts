@@ -1,0 +1,26 @@
+Sub RemoveTestPrefix()
+    Dim sourceSheet As Worksheet
+    Dim lastRow As Long
+    Dim sourceRange As Range
+    Dim sourceCell As Range
+    
+    ' Set the source sheet
+    Set sourceSheet = ThisWorkbook.Worksheets("SourceSheet")
+    
+    ' Get the last used row in column B of the source sheet
+    lastRow = sourceSheet.Cells(sourceSheet.Rows.Count, "B").End(xlUp).Row
+    
+    ' Set the range of cells in column B
+    Set sourceRange = sourceSheet.Range("B1:B" & lastRow)
+    
+    ' Loop through each cell in the range
+    For Each sourceCell In sourceRange
+        ' Check if the cell value ends with "Test.java"
+        If Right(sourceCell.Value, 9) = "Test.java" Then
+            ' Remove "Test" from the value
+            sourceCell.Value = Left(sourceCell.Value, Len(sourceCell.Value) - 9) & ".java"
+        End If
+    Next sourceCell
+    
+    MsgBox "Test prefix removed successfully!", vbInformation
+End Sub
