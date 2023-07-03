@@ -1,0 +1,37 @@
+Sub CompareAndCopyTestFiles()
+    Dim sourceSheet As Worksheet
+    Dim destSheet As Worksheet
+    Dim sourceLastRow As Long
+    Dim destLastRow As Long
+    Dim sourceCell As Range
+    Dim destCell As Range
+    Dim sourceValue As String
+    Dim destValue As String
+    
+    ' Set the source and destination sheets
+    Set sourceSheet = ThisWorkbook.Worksheets("SourceSheet")
+    Set destSheet = ThisWorkbook.Worksheets("DestinationSheet")
+    
+    ' Get the last used row in the source and destination sheets
+    sourceLastRow = sourceSheet.Cells(sourceSheet.Rows.Count, "B").End(xlUp).Row
+    destLastRow = destSheet.Cells(destSheet.Rows.Count, "B").End(xlUp).Row
+    
+    ' Loop through each cell in Column B of the source sheet
+    For Each sourceCell In sourceSheet.Range("B1:B" & sourceLastRow)
+        sourceValue = sourceCell.Value
+        
+        ' Loop through each cell in Column B of the destination sheet
+        For Each destCell In destSheet.Range("B1:B" & destLastRow)
+            destValue = destCell.Value
+            
+            ' Check if the destination value is a test file and matches the source value
+            If destValue Like "*" & sourceValue & "Test.java" Then
+                ' Copy the corresponding value from Column B of the destination sheet to Column G of the source sheet
+                sourceCell.Offset(0, 5).Value = destValue
+                Exit For ' Exit the inner loop once a match is found
+            End If
+        Next destCell
+    Next sourceCell
+    
+    MsgBox "Test files copied successfully!", vbInformation
+End Sub
