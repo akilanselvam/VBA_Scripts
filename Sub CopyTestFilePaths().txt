@@ -1,0 +1,22 @@
+Sub CopyTestFilePaths()
+    Dim lastRow As Long
+    Dim rng As Range
+    Dim cell As Range
+    Dim javaFileName As String
+    Dim testFilePath As String
+    
+    lastRow = Cells(Rows.Count, 2).End(xlUp).Row ' Get the last row in column B
+    
+    For Each cell In Range("B2:B" & lastRow) ' Iterate through each cell in column B starting from row 2
+        javaFileName = cell.Value ' Get the Java file name
+        
+        ' Construct the test file path by replacing ".java" with "Test.java"
+        testFilePath = Replace(javaFileName, ".java", "Test.java")
+        
+        ' Check if the test file exists
+        If Dir(testFilePath) <> "" Then
+            ' Copy the test file path to column G in the same row
+            cell.Offset(0, 5).Value = testFilePath
+        End If
+    Next cell
+End Sub
