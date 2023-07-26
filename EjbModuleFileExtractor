@@ -1,0 +1,71 @@
+import java.io.*;
+import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class EjbModuleFileExtractor {
+    public static void main(String[] args) {
+        // Hardcoded paths
+        String sourcePath = "D:\\SPRING\\lifehack";
+        String destinationPath = "D:\\SPRING\\Src_Dst";
+
+        try {
+            copyEjbModules(sourcePath, destinationPath);
+            System.out.println("EjbModule contents copied successfully!");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void copyEjbModules(String sourcePath, String destinationPath) throws IOException {
+        File sourceDirectory = new File(sourcePath);
+
+        if (!sourceDirectory.exists() || !sourceDirectory.isDirectory()) {
+            System.out.println("Source directory not found: " + sourceDirectory.getAbsolutePath());
+            return;
+        }
+
+        File[] subdirectories = sourceDirectory.listFiles();
+        if (subdirectories != null) {
+            for (File subdirectory : subdirectories) {
+                if (subdirectory.isDirectory()) {
+                    searchAndCopyEjbModule(subdirectory, destinationPath);
+                }
+            }
+        }
+    }
+
+    private static void searchAndCopyEjbModule(File directory, String destinationPath) throws IOException {
+        File[] subdirectories = directory.listFiles();
+        if (subdirectories != null) {
+            for (File subdirectory : subdirectories) {
+                if (subdirectory.getName().equals("ejbModule") && subdirectory.isDirectory()) {
+                    copyFilesInDirectory(subdirectory, destinationPath);
+                } else if (subdirectory.isDirectory()) {
+                    searchAndCopyEjbModule(subdirectory, destinationPath);
+                }
+            }
+        }
+    }
+
+    private static void copyFilesInDirectory(File sourceDirectory, String destinationPath) throws IOException {
+        File[] files = sourceDirectory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile()) {
+                    copyFile(file, destinationPath, sourceDirectory.getAbsolutePath());
+                }
+            }
+        }
+    }
+
+    private static void copyFile(File sourceFile, String destinationPath, String sourcePath) throws IOException {
+        String relativePath = sourceFile.getParentFile().getAbsolutePath().substring(sourcePath.length());
+        File destFile = new File(destinationPath + relativePath + "/" + sourceFile.getName());
+
+        // Create the destination directories if they don't exist
+        destFile.getParentFile().mkdirs();
+
+        Files.copy(sourceFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    }
+}
