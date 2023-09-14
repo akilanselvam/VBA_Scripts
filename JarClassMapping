@@ -1,0 +1,90 @@
+import java.io.*;
+import java.util.*;
+import java.util.jar.*;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+
+public class JarClassMapping {
+    public static void main(String[] args) {
+        String sourceJarFolder = "path/to/source/jars";
+        String destinationJarFolder = "path/to/destination/jars";
+        String outputCsvFilePath = "path/to/output/mapping.csv";
+
+        try {
+            File outputCsvFile = new File(outputCsvFilePath);
+            FileWriter csvFileWriter = new FileWriter(outputCsvFile);
+
+            CSVPrinter csvPrinter = new CSVPrinter(csvFileWriter, CSVFormat.DEFAULT
+                    .withHeader("Class File", "Source JAR", "Destination JAR(s)"));
+
+            File[] sourceJars = new File(sourceJarFolder).listFiles();
+            File[] destinationJars = new File(destinationJarFolder).listFiles();
+
+            for (File sourceJar : sourceJars) {
+                String sourceJarName = sourceJar.getName();
+                JarFile sourceJarFile = new JarFile(sourceJar);
+
+                for (File destinationJar : destinationJars) {
+                    JarFile destinationJarFile = new JarFile(destinationJar);
+                    Set<String> matchingClasses = findMatchingClasses(sourceJarFile, destinationJarFile);
+
+                    if (!matchingClasses.isEmpty()) {
+                        for (String className : matchingClasses) {
+                            csvPrinter.printRecord(className, sourceJarName, destinationJar.getName());
+                        }
+                    }
+                    destinationJarFile.close();
+                }
+                sourceJarFile.close();
+            }
+
+            csvPrinter.close();
+            System.out.println("CSV file created successfully.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static Set<String> findMatchingClasses(JarFile sourceJar, JarFile destinationJar) {
+        Set<String> matchingClasses = new HashSet<>();
+
+        Enumeration<JarEntry> sourceEntries = sourceJar.entries();
+        Enumeration<JarEntry> destinationEntries = destinationJar.entries();
+
+        while (sourceEntries.hasMoreElements()) {
+            JarEntry sourceEntry = sourceEntries.nextElement();
+            if (!sourceEntry.isDirectory() && sourceEntry.getName().endsWith(".class")) {
+                byte[] sourceBytes = readBytesFromJar(sourceJar, sourceEntry);
+                while (destinationEntries.hasMoreElements()) {
+                    JarEntry destinationEntry = destinationEntries.nextElement();
+                    if (!destinationEntry.isDirectory() && destinationEntry.getName().endsWith(".class")) {
+                        byte[] destinationBytes = readBytesFromJar(destinationJar, destinationEntry);
+                        if (Arrays.equals(sourceBytes, destinationBytes)) {
+                            matchingClasses.add(sourceEntry.getName());
+                        }
+                    }
+                }
+                // Reset destinationEntries for the next source entry
+                destinationEntries = destinationJar.entries();
+            }
+        }
+
+        return matchingClasses;
+    }
+
+    private static byte[] readBytesFromJar(JarFile jarFile, JarEntry jarEntry) {
+        try (InputStream inputStream = jarFile.getInputStream(jarEntry)) {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                byteArrayOutputStream.write(buffer, 0, bytesRead);
+            }
+            return byteArrayOutputStream.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+}
