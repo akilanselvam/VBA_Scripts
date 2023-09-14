@@ -1,0 +1,43 @@
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.*;
+import java.util.*;
+
+public class FileScanner {
+
+    public static void main(String[] args) {
+
+        String inputPath = "C:\\Users\\8195701\\Downloads\\Latest Jar\\Src_repo\\9-11-2023\\domain";
+        String destinationPath = "C:\\Users\\8195701\\Downloads\\Latest Jar\\Src_repo";
+        String outputFileName = "rcb-vh-ebbs.txt";
+
+        // List of folder names to exclude
+        List<String> excludedFolders = Arrays.asList("Jenkins", "Module Files", "APIEntityReference", "Scripts", "IREPORTS");
+
+        // Create a set to store unique file paths
+        HashSet<String> uniqueFilePaths = new HashSet<>();
+
+        try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(Paths.get(destinationPath, outputFileName)))) {
+
+            Files.walk(Paths.get(inputPath))
+                    .filter(Files::isRegularFile)
+                    .forEach(filePath -> {
+                        String filePathString = filePath.toString();
+
+                        // Check if the filePathString contains any excluded folder name
+                        boolean containsExcludedFolder = excludedFolders.stream().anyMatch(folder -> filePathString.contains(folder));
+
+                        if (!containsExcludedFolder) {
+                            // Check if the filePathString is not already in the set of uniqueFilePaths
+                            if (uniqueFilePaths.add(filePathString)) {
+                                writer.println(filePathString);
+                            }
+                        }
+                    });
+
+            System.out.println("File scanning and exclusion completed.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
