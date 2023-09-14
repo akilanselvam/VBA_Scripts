@@ -1,0 +1,95 @@
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.commons.io.FileUtils;
+
+import java.io.*;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
+public class JarClassMapping {
+    public static void main(String[] args) {
+        String sourceJarFolder = "path/to/source/jars";
+        String destinationJarFolder = "path/to/destination/jars";
+        String outputExcelFilePath = "path/to/output/excel.xlsx";
+
+        try {
+            // Get a list of source JAR files
+            List<File> sourceJars = Arrays.asList(new File(sourceJarFolder).listFiles());
+
+            // Create an Excel workbook
+            Workbook workbook = new XSSFWorkbook();
+            Sheet sheet = workbook.createSheet("Class Mapping");
+
+            // Create headers for columns
+            Row headerRow = sheet.createRow(0);
+            headerRow.createCell(0).setCellValue("Class File");
+            headerRow.createCell(1).setCellValue("Source JAR");
+            headerRow.createCell(2).setCellValue("Destination JAR(s)");
+
+            int rowIndex = 1;
+
+            for (File sourceJar : sourceJars) {
+                String sourceJarName = sourceJar.getName();
+
+                for (File destinationJar : new File(destinationJarFolder).listFiles()) {
+                    Set<String> matchingClasses = findMatchingClasses(sourceJar, destinationJar);
+
+                    if (!matchingClasses.isEmpty()) {
+                        // Create a new row for each matching class
+                        for (String className : matchingClasses) {
+                            Row row = sheet.createRow(rowIndex++);
+                            row.createCell(0).setCellValue(className);
+                            row.createCell(1).setCellValue(sourceJarName);
+                            row.createCell(2).setCellValue(destinationJar.getName());
+                        }
+                    }
+                }
+            }
+
+            // Write the workbook to an Excel file
+            try (FileOutputStream outputStream = new FileOutputStream(outputExcelFilePath)) {
+                workbook.write(outputStream);
+            }
+
+            System.out.println("Excel file created successfully.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Find matching class files in source and destination JARs
+    private static Set<String> findMatchingClasses(File sourceJar, File destinationJar) throws IOException {
+        Set<String> matchingClasses = new HashSet<>();
+        try (ZipFile sourceZip = new ZipFile(sourceJar)) {
+            try (ZipFile destinationZip = new ZipFile(destinationJar)) {
+                Enumeration<? extends ZipEntry> sourceEntries = sourceZip.entries();
+                while (sourceEntries.hasMoreElements()) {
+                    ZipEntry sourceEntry = sourceEntries.nextElement();
+                    if (!sourceEntry.isDirectory() && sourceEntry.getName().endsWith(".class")) {
+                        // Read the class file content
+                        InputStream sourceInputStream = sourceZip.getInputStream(sourceEntry);
+                        byte[] sourceBytes = FileUtils.toByteArray(sourceInputStream);
+
+                        Enumeration<? extends ZipEntry> destEntries = destinationZip.entries();
+                        while (destEntries.hasMoreElements()) {
+                            ZipEntry destEntry = destEntries.nextElement();
+                            if (!destEntry.isDirectory() && destEntry.getName().endsWith(".class")) {
+                                // Read the class file content from destination JAR
+                                InputStream destInputStream = destinationZip.getInputStream(destEntry);
+                                byte[] destBytes = FileUtils.toByteArray(destInputStream);
+
+                                // Compare the content of class files
+                                if (Arrays.equals(sourceBytes, destBytes)) {
+                                    matchingClasses.add(sourceEntry.getName());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return matchingClasses;
+    }
+}
