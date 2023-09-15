@@ -1,0 +1,12 @@
+# Replace 'YourClassName' with the name of the class you're searching for
+class_to_search="YourClassName"
+
+# Replace 'directory_containing_jars' with the directory where your .jar files are located
+directory_containing_jars="/path/to/directory_containing_jars"
+
+# Loop through .jar files and search for the class in each one
+for jar_file in "$directory_containing_jars"/*.jar; do
+    echo "Searching in $jar_file:"
+    jar -tf "$jar_file" | grep "$class_to_search"
+    echo "------------------------"
+done
