@@ -1,0 +1,94 @@
+import jxl.Workbook;
+import jxl.write.Label;
+import jxl.write.WritableSheet;
+import jxl.write.WritableWorkbook;
+import jxl.write.WriteException;
+import jxl.write.biff.RowsExceededException;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class JarContentComparison {
+    public static void main(String[] args) throws WriteException, IOException {
+        List<String> sourceJarPaths = listJarsInFolder("C:\\Path\\To\\SourceFolder");
+        List<String> destinationJarPaths = listJarsInFolder("C:\\Path\\To\\DestinationFolder");
+
+        WritableWorkbook workbook = null;
+
+        try {
+            workbook = Workbook.createWorkbook(new File("JarContentComparison.xls"));
+
+            for (String sourceJarPath : sourceJarPaths) {
+                String sourceJarName = getJarName(sourceJarPath);
+
+                for (String destinationJarPath : destinationJarPaths) {
+                    String destinationJarName = getJarName(destinationJarPath);
+
+                    if (sourceJarName.equals(destinationJarName)) {
+                        compareAndWriteToExcel(sourceJarPath, destinationJarPath, sourceJarName, workbook);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (workbook != null) {
+                workbook.write();
+                workbook.close();
+            }
+        }
+
+        System.out.println("Jar content comparison completed.");
+    }
+
+    private static List<String> listJarsInFolder(String folderPath) {
+        List<String> jarPaths = new ArrayList<>();
+        File folder = new File(folderPath);
+        File[] files = folder.listFiles();
+
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile() && file.getName().toLowerCase().endsWith(".jar")) {
+                    jarPaths.add(file.getAbsolutePath());
+                }
+            }
+        }
+
+        return jarPaths;
+    }
+
+    private static String getJarName(String jarPath) {
+        File jarFile = new File(jarPath);
+        return jarFile.getName();
+    }
+
+    private static void compareAndWriteToExcel(String sourceJarPath, String destinationJarPath, String jarName, WritableWorkbook workbook) throws IOException, WriteException {
+        WritableSheet sheet = workbook.createSheet(jarName, workbook.getNumberOfSheets());
+
+        // Implement your comparison logic here
+        // For example, you can compare the contents of files within sourceJarPath and destinationJarPath
+        // and write the results to the Excel sheet.
+        // You may need to use additional labels to represent the comparison results.
+
+        // Example:
+        // Label headerLabelA = new Label(0, 0, "FileSourcePath");
+        // Label headerLabelB = new Label(1, 0, "DestinationPath");
+        // sheet.addCell(headerLabelA);
+        // sheet.addCell(headerLabelB);
+
+        // Read files from sourceJarPath and destinationJarPath
+        // Compare file paths or contents and write results to the sheet
+
+        // Example:
+        // Label resultLabel = new Label(2, rowIndex, "Comparison Result");
+        // sheet.addCell(resultLabel);
+
+        // Remember to increment rowIndex as you process each file
+
+        // Close any open resources
+
+        // sourceReader.close();
+        // destinationReader.close();
+    }
+}
