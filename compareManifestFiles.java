@@ -29,3 +29,23 @@ private static boolean compareManifestFiles(String filePath1, String filePath2) 
         return false;
     }
 }
+
+
+while ((line = reader.readLine()) != null) {
+    String key = getFilewithPathSource(line);
+    System.out.println("Parent: " + line);
+    System.out.println("Parts: " + key);
+    List<String> movedToRepos = destinationReposFileMap.getOrDefault(key, new ArrayList<>());
+
+    // Check if the file name is "MANIFEST.MF"
+    if (key.endsWith("/MANIFEST.MF") && movedToRepos.size() > 0) {
+        String manifestPath = movedToRepos.get(0); // Assuming it's the first destination
+        boolean areManifestsEqual = compareManifestFiles(line, manifestPath);
+        if (areManifestsEqual) {
+            writeExcel(rowIndex++, line, String.join(".", movedToRepos), sheet, key);
+        }
+    } else {
+        writeExcel(rowIndex++, line, String.join(".", movedToRepos), sheet, key);
+    }
+}
+
