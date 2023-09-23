@@ -73,7 +73,7 @@ public class FilesMappingInExcel4 {
                     List<String> movedToReposPath = destinationReposLineMap.getOrDefault(key, new ArrayList<>());
 
 //                    System.out.println(movedToRepos);
-                    writeExcel(rowIndex++, fullPath, String.join(",", movedToRepos), fullPath, sheet, key,String.join(",", movedToReposPath));
+                    writeExcel(rowIndex++, fullPath, String.join(",", movedToRepos), fullPath, sheet, key,movedToReposPath);
 
                 }
                 reader.close();
@@ -103,7 +103,7 @@ public class FilesMappingInExcel4 {
                 movedToRepos = entry.getValue();
                 List<String> movedToReposPath = destinationReposLineMap.getOrDefault(key, new ArrayList<>());
                 if (movedToRepos.size() >= 2) {
-                    writeExcel(rowIndex++, key, String.join(",", movedToRepos), key, sheet, key,String.join(",", movedToReposPath));
+                    writeExcel(rowIndex++, key, String.join(",", movedToRepos), key, sheet, key,movedToReposPath);
                 }
             }
         } catch (Exception e) {
@@ -157,16 +157,22 @@ public class FilesMappingInExcel4 {
             e.printStackTrace();
         }
     }
-    private static void writeExcel(int rowindex, String keyFileName, String repoName,String fullPath, WritableSheet sheet, String key,String repoPath) throws RowsExceededException, WriteException {
+    private static void writeExcel(int rowindex, String keyFileName, String repoName,String fullPath, WritableSheet sheet, String key,List<String> repoPaths) throws RowsExceededException, WriteException {
         Label label0 = new Label(0, rowindex, keyFileName);
         Label label1 = new Label(2, rowindex, key);
         Label label2 = new Label(1, rowindex, repoName);
-        Label label3 = new Label(3, rowindex, repoPath);
+
+        int columnIndex = 3;
+        for (String repoPath : repoPaths) {
+            Label repoPathLabel = new Label(columnIndex, rowindex, repoPath);
+            sheet.addCell(repoPathLabel);
+            columnIndex++;
+        }
 
         sheet.addCell(label0);
         sheet.addCell(label2);
         sheet.addCell(label1);
-        sheet.addCell(label3);
+
 
     }
 }
