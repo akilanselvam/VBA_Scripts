@@ -128,22 +128,19 @@ public class FilesMappingInExcel1 {
             }
             List<String> stringList = Arrays.asList(parts);
             key = res.toString();
-            if(key.contains("META-INF")&&(stringList.contains("src")||stringList.contains("ejbModule"))){
+            if (key.contains("META-INF") && (stringList.contains("src") || stringList.contains("ejbModule"))) {
                 int indexOfSrc = stringList.indexOf("src");
                 int indexOfEjbModule = stringList.indexOf("ejbModule");
 
-                if (indexOfSrc != -1 && indexOfEjbModule != -1) {
-                    // Both "src" and "ejbModule" exist, append the content before the first occurrence
-                    int minIndex = Math.min(indexOfSrc, indexOfEjbModule);
-                    key = String.join("/", Arrays.copyOfRange(parts, 0, minIndex)) + key;
-                } else if (indexOfSrc != -1) {
-                    // Only "src" exists, append the content before it
-                    key = String.join("/", Arrays.copyOfRange(parts, 0, indexOfSrc)) + key;
-                } else {
-                    // Only "ejbModule" exists, append the content before it
-                    key = String.join("/", Arrays.copyOfRange(parts, 0, indexOfEjbModule)) + key;
+                if (indexOfSrc != -1) {
+                    // "src" exists, append the immediate part before it
+                    key = parts[indexOfSrc - 1] + key;
+                } else if (indexOfEjbModule != -1) {
+                    // "ejbModule" exists, append the immediate part before it
+                    key = parts[indexOfEjbModule - 1] + key;
                 }
             }
+
         }
         return key;
     }
