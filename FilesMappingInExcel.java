@@ -8,12 +8,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class FilesMappingInExcel4 {
+public class FilesMappingInExcel1 {
 
     public static void main(String[] args) throws WriteException, IOException {
         List<String> sourceRepoList = new ArrayList<>();
@@ -99,7 +96,7 @@ public class FilesMappingInExcel4 {
             sheet.addCell(headerLabelD);
             List<String> movedToRepos = null;
             for (Map.Entry<String, List<String>> entry : destinationReposFileMap.entrySet()) {
-                 key = entry.getKey();
+                key = entry.getKey();
                 movedToRepos = entry.getValue();
                 List<String> movedToReposPath = destinationReposLineMap.getOrDefault(key, new ArrayList<>());
                 if (movedToRepos.size() >= 2) {
@@ -129,7 +126,24 @@ public class FilesMappingInExcel4 {
                     res.append("/").append(part);
                 }
             }
-           key = res.toString();
+            List<String> stringList = Arrays.asList(parts);
+            key = res.toString();
+            if(key.contains("META-INF")&&(stringList.contains("src")||stringList.contains("ejbModule"))){
+                int indexOfSrc = stringList.indexOf("src");
+                int indexOfEjbModule = stringList.indexOf("ejbModule");
+
+                if (indexOfSrc != -1 && indexOfEjbModule != -1) {
+                    // Both "src" and "ejbModule" exist, append the content before the first occurrence
+                    int minIndex = Math.min(indexOfSrc, indexOfEjbModule);
+                    key = String.join("/", Arrays.copyOfRange(parts, 0, minIndex)) + key;
+                } else if (indexOfSrc != -1) {
+                    // Only "src" exists, append the content before it
+                    key = String.join("/", Arrays.copyOfRange(parts, 0, indexOfSrc)) + key;
+                } else {
+                    // Only "ejbModule" exists, append the content before it
+                    key = String.join("/", Arrays.copyOfRange(parts, 0, indexOfEjbModule)) + key;
+                }
+            }
         }
         return key;
     }
