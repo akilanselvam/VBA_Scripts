@@ -25,7 +25,7 @@ public class ListTxtFiles {
     private static List<String> listTxtFiles(String directoryPath) {
         List<String> txtFiles = new ArrayList<>();
         try {
-            Files.walk(Paths.get(directoryPath))
+            Files.list(Paths.get(directoryPath))
                     .filter(Files::isRegularFile)
                     .filter(path -> path.toString().endsWith(".txt"))
                     .map(Path::toString)
