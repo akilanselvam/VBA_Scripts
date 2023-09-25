@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ListTxtFiles {
@@ -22,16 +23,17 @@ public class ListTxtFiles {
     }
 
     private static List<String> listTxtFiles(String directoryPath) {
+        List<String> txtFiles = new ArrayList<>();
         try {
-            return Files.walk(Paths.get(directoryPath))
+            Files.walk(Paths.get(directoryPath))
                     .filter(Files::isRegularFile)
                     .filter(path -> path.toString().endsWith(".txt"))
                     .map(Path::toString)
-                    .toList();
+                    .forEach(txtFiles::add);
         } catch (IOException e) {
             e.printStackTrace();
-            return List.of();
         }
+        return txtFiles;
     }
 
     private static void writeToFile(String filePath, List<String> lines) {
