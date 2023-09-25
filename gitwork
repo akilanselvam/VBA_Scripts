@@ -1,0 +1,104 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
+public class GitRepoManager {
+    public static void main(String[] args) {
+        try {
+            // Step 1: Read repository URLs from the .properties file and store them in an array.
+            BufferedReader reader = new BufferedReader(new FileReader("repos.properties"));
+            String line;
+            String[] repoUrls = null;
+
+            while ((line = reader.readLine()) != null) {
+                repoUrls = line.split(",");
+            }
+
+            if (repoUrls != null) {
+                for (String repoUrl : repoUrls) {
+                    // Step 2: Clone the repository.
+                    cloneRepository(repoUrl.trim());
+
+                    // Step 3: Create a release branch.
+                    createReleaseBranch(repoUrl.trim(), "release-branch");
+
+                    // Step 4: Create feature branches from the release branch.
+                    createFeatureBranch(repoUrl.trim(), "release-branch", "feature-branch");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void cloneRepository(String repoUrl) {
+        // Use Git commands to clone the repository.
+        // You can use a Git library for Java or execute Git commands using ProcessBuilder.
+        // For simplicity, here's a placeholder for the clone command:
+        System.out.println("Cloning repository: " + repoUrl);
+        // Execute Git clone command here.
+    }
+
+    private static void createReleaseBranch(String repoUrl, String releaseBranchName) {
+        // Use Git commands to create a release branch.
+        System.out.println("Creating release branch in repository: " + repoUrl);
+        // Execute Git branch creation command here.
+    }
+
+    private static void createFeatureBranch(String repoUrl, String baseBranchName, String featureBranchName) {
+        // Use Git commands to create a feature branch from the base branch.
+        System.out.println("Creating feature branch in repository: " + repoUrl);
+        // Execute Git branch creation command here.
+    }
+}
+
+private static void cloneRepository(String repoUrl) {
+    try {
+        ProcessBuilder processBuilder = new ProcessBuilder("git", "clone", repoUrl);
+        Process process = processBuilder.start();
+        int exitCode = process.waitFor();
+
+        if (exitCode == 0) {
+            System.out.println("Repository cloned successfully: " + repoUrl);
+        } else {
+            System.err.println("Failed to clone repository: " + repoUrl);
+        }
+    } catch (IOException | InterruptedException e) {
+        e.printStackTrace();
+    }
+}
+
+
+private static void createReleaseBranch(String repoUrl, String releaseBranchName) {
+    try {
+        ProcessBuilder processBuilder = new ProcessBuilder("git", "checkout", "-b", releaseBranchName);
+        processBuilder.directory(new File(repoUrl));
+        Process process = processBuilder.start();
+        int exitCode = process.waitFor();
+
+        if (exitCode == 0) {
+            System.out.println("Release branch created successfully in repository: " + repoUrl);
+        } else {
+            System.err.println("Failed to create release branch in repository: " + repoUrl);
+        }
+    } catch (IOException | InterruptedException e) {
+        e.printStackTrace();
+    }
+}
+
+private static void createFeatureBranch(String repoUrl, String baseBranchName, String featureBranchName) {
+    try {
+        ProcessBuilder processBuilder = new ProcessBuilder("git", "checkout", "-b", featureBranchName, baseBranchName);
+        processBuilder.directory(new File(repoUrl));
+        Process process = processBuilder.start();
+        int exitCode = process.waitFor();
+
+        if (exitCode == 0) {
+            System.out.println("Feature branch created successfully in repository: " + repoUrl);
+        } else {
+            System.err.println("Failed to create feature branch in repository: " + repoUrl);
+        }
+    } catch (IOException | InterruptedException e) {
+        e.printStackTrace();
+    }
+}
