@@ -1,0 +1,44 @@
+import java.io.IOException;
+import java.nio.file.*;
+import java.util.List;
+
+public class ListTxtFiles {
+    public static void main(String[] args) {
+        // Replace these with your source and destination paths
+        String sourcePath = "path/to/source";
+        String destPath = "path/to/destination";
+
+        // List .txt files in the source directory
+        List<String> sourceTxtFiles = listTxtFiles(sourcePath);
+        
+        // List .txt files in the destination directory
+        List<String> destTxtFiles = listTxtFiles(destPath);
+
+        // Write sourceTxtFiles to Src_path.txt
+        writeToFile(sourcePath + "/Src_path.txt", sourceTxtFiles);
+
+        // Write destTxtFiles to Dest_path.txt
+        writeToFile(destPath + "/Dest_path.txt", destTxtFiles);
+    }
+
+    private static List<String> listTxtFiles(String directoryPath) {
+        try {
+            return Files.walk(Paths.get(directoryPath))
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.toString().endsWith(".txt"))
+                    .map(Path::toString)
+                    .toList();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return List.of();
+        }
+    }
+
+    private static void writeToFile(String filePath, List<String> lines) {
+        try {
+            Files.write(Paths.get(filePath), lines);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
