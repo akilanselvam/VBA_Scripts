@@ -1,0 +1,85 @@
+public class MainProgram {
+    public static void main(String[] args) {
+        // Execute a shell script (replace "your_script.sh" with the actual script name)
+        executeShellScript("your_script.sh");
+
+        // Execute Program1
+        executeMainMethod("Program1");
+
+        // Execute Program2
+        executeMainMethod("Program2");
+
+        // Execute Program3
+        executeMainMethod("Program3");
+
+        // Execute Program4
+        executeMainMethod("Program4");
+
+        // Execute Program5
+        executeMainMethod("Program5");
+    }
+
+    private static void executeShellScript(String scriptName) {
+        try {
+            Process process = Runtime.getRuntime().exec("sh " + scriptName);
+            int exitCode = process.waitFor();
+
+            if (exitCode == 0) {
+                System.out.println("Shell script executed successfully.");
+            } else {
+                System.out.println("Shell script execution failed with exit code: " + exitCode);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void executeMainMethod(String className) {
+        try {
+            Class<?> clazz = Class.forName(className);
+            // Assuming the main method is public and takes a String array as an argument
+            Class<?>[] argTypes = {String[].class};
+            java.lang.reflect.Method mainMethod = clazz.getMethod("main", argTypes);
+            String[] params = null; // You can pass command-line arguments here if needed
+            mainMethod.invoke(null, (Object) params);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+public class MainProgram {
+    public static void main(String[] args) {
+        // Execute Program1
+        executeJavaFile("Program1");
+
+        // Execute Program2
+        executeJavaFile("Program2");
+
+        // Execute Program3
+        executeJavaFile("Program3");
+
+        // Execute Program4
+        executeJavaFile("Program4");
+
+        // Execute Program5
+        executeJavaFile("Program5");
+    }
+
+    private static void executeJavaFile(String fileName) {
+        try {
+            Process process = Runtime.getRuntime().exec("java " + fileName);
+            int exitCode = process.waitFor();
+
+            if (exitCode == 0) {
+                System.out.println(fileName + " executed successfully.");
+            } else {
+                System.out.println(fileName + " execution failed with exit code: " + exitCode);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
