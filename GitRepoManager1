@@ -1,0 +1,94 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.File;
+
+public class GitRepoManager {
+    public static void main(String[] args) {
+        try {
+            // Specify the path where you want to perform Git operations.
+            String workingDirectory = "/path/to/your/directory";
+
+            // Step 1: Read repository URLs from the .properties file and store them in an array.
+            BufferedReader reader = new BufferedReader(new FileReader("repos.properties"));
+            String line;
+            String[] repoUrls = null;
+
+            while ((line = reader.readLine()) != null) {
+                repoUrls = line.split(",");
+            }
+
+            if (repoUrls != null) {
+                for (String repoUrl : repoUrls) {
+                    // Step 2: Clone the repository.
+                    cloneRepository(workingDirectory, repoUrl.trim());
+
+                    // Step 3: Create a release branch.
+                    createReleaseBranch(workingDirectory, repoUrl.trim(), "release-branch");
+
+                    // Step 4: Create feature branches from the release branch.
+                    createFeatureBranch(workingDirectory, repoUrl.trim(), "release-branch", "feature-branch");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void cloneRepository(String workingDirectory, String repoUrl) {
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder("git", "clone", repoUrl);
+            processBuilder.directory(new File(workingDirectory));
+            Process process = processBuilder.start();
+            int exitCode = process.waitFor();
+
+            if (exitCode == 0) {
+                System.out.println("Repository cloned successfully: " + repoUrl);
+            } else {
+                System.err.println("Failed to clone repository: " + repoUrl);
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void createReleaseBranch(String workingDirectory, String repoUrl, String releaseBranchName) {
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder("git", "checkout", "-b", releaseBranchName);
+            processBuilder.directory(new File(workingDirectory, getRepoDirectoryName(repoUrl)));
+            Process process = processBuilder.start();
+            int exitCode = process.waitFor();
+
+            if (exitCode == 0) {
+                System.out.println("Release branch created successfully in repository: " + repoUrl);
+            } else {
+                System.err.println("Failed to create release branch in repository: " + repoUrl);
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void createFeatureBranch(String workingDirectory, String repoUrl, String baseBranchName, String featureBranchName) {
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder("git", "checkout", "-b", featureBranchName, baseBranchName);
+            processBuilder.directory(new File(workingDirectory, getRepoDirectoryName(repoUrl)));
+            Process process = processBuilder.start();
+            int exitCode = process.waitFor();
+
+            if (exitCode == 0) {
+                System.out.println("Feature branch created successfully in repository: " + repoUrl);
+            } else {
+                System.err.println("Failed to create feature branch in repository: " + repoUrl);
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String getRepoDirectoryName(String repoUrl) {
+        // Extract the repository directory name from the URL.
+        int lastSlashIndex = repoUrl.lastIndexOf('/');
+        return repoUrl.substring(lastSlashIndex + 1, repoUrl.length() - 4); // Remove '.git' extension.
+    }
+}
