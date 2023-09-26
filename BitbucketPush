@@ -1,0 +1,83 @@
+import java.io.*;
+import java.util.*;
+import java.util.regex.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import org.json.JSONObject;
+
+public class BitbucketPush {
+    public static void main(String[] args) {
+        String path = "/path/to/your/repo"; // Specify the path to your Git repository
+        String branchName = "feature/your-jira-issue"; // Replace with your Jira issue branch name
+
+        try {
+            // Step 1: Find the Git repository in the specified path
+            ProcessBuilder processBuilder = new ProcessBuilder("git", "rev-parse", "--show-toplevel");
+            processBuilder.directory(new File(path));
+            Process process = processBuilder.start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String repositoryPath = reader.readLine();
+            process.waitFor();
+
+            if (repositoryPath == null) {
+                System.out.println("No Git repository found in the specified path.");
+                return;
+            }
+
+            // Step 2: Push changes to the specified branch
+            ProcessBuilder pushProcessBuilder = new ProcessBuilder("git", "push", "origin", branchName);
+            pushProcessBuilder.directory(new File(repositoryPath));
+            Process pushProcess = pushProcessBuilder.start();
+            pushProcess.waitFor();
+
+            // Step 3: Generate a PR link
+            String prLink = generatePullRequestLink(repositoryPath, branchName);
+
+            System.out.println("Pushed changes to branch '" + branchName + "'");
+            System.out.println("Pull Request Link: " + prLink);
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String generatePullRequestLink(String repositoryPath, String branchName) throws IOException {
+        // Replace with your Bitbucket credentials and repository information
+        String username = "your-bitbucket-username";
+        String password = "your-bitbucket-password";
+        String repoSlug = "your-repo-slug";
+        String workspace = "your-workspace";
+
+        String apiUrl = String.format("https://api.bitbucket.org/2.0/repositories/%s/%s/pullrequests", workspace, repoSlug);
+
+        URL url = new URL(apiUrl);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("POST");
+        connection.setDoOutput(true);
+        String auth = Base64.getEncoder().encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8));
+        connection.setRequestProperty("Authorization", "Basic " + auth);
+        connection.setRequestProperty("Content-Type", "application/json");
+
+        // Create JSON payload for the pull request
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("title", "Your Pull Request Title");
+        requestBody.put("source", new JSONObject().put("branch", new JSONObject().put("name", branchName)));
+        requestBody.put("destination", new JSONObject().put("branch", new JSONObject().put("name", "master")));
+
+        try (OutputStream os = connection.getOutputStream()) {
+            byte[] input = requestBody.toString().getBytes(StandardCharsets.UTF_8);
+            os.write(input, 0, input.length);
+        }
+
+        int responseCode = connection.getResponseCode();
+        if (responseCode == HttpURLConnection.HTTP_CREATED) {
+            // Successfully created the pull request
+            JSONObject jsonResponse = new JSONObject(new InputStreamReader(connection.getInputStream()));
+            return jsonResponse.getString("links");
+        } else {
+            // Handle error cases
+            System.out.println("Error creating pull request. HTTP Response Code: " + responseCode);
+            return null;
+        }
+    }
+}
