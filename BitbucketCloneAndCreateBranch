@@ -1,0 +1,55 @@
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+
+import java.io.File;
+
+public class BitbucketCloneAndCreateBranch {
+    public static void main(String[] args) throws Exception {
+        String baseUrl = "https://bitbucket.global.standardchartered.com/rest/api/1.0";
+        String repositorySlug = "gb-svc-idv-imdg";
+        String projectKey = "COLT";
+        String branchName = "release/4.0";
+        String accessToken = "<TBU Access Token>"; // Replace with your PAT
+        
+        // Define the local path where the repository should be cloned
+        String localPath = "/path/to/local/repo"; // Replace with your desired local path
+
+        // Clone the repository (requires authentication)
+        HttpClient httpClient = HttpClients.createDefault();
+        HttpGet cloneRequest = new HttpGet(baseUrl + "/projects/" + projectKey + "/repos/" + repositorySlug + "/archive?format=zip&branch=refs/heads/master");
+        cloneRequest.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+        
+        // Set up the local directory for cloning
+        File localDirectory = new File(localPath);
+
+        HttpResponse cloneResponse = httpClient.execute(cloneRequest);
+        int cloneStatusCode = cloneResponse.getStatusLine().getStatusCode();
+        
+        if (cloneStatusCode == 200) {
+            // Repository cloned successfully, now create a branch
+            HttpPost createBranchRequest = new HttpPost(baseUrl + "/projects/" + projectKey + "/repos/" + repositorySlug + "/branches");
+            createBranchRequest.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+            createBranchRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+            
+            String jsonPayload = "{\"name\":\"" + branchName + "\",\"startPoint\":\"refs/heads/master\"}";
+            createBranchRequest.setEntity(new StringEntity(jsonPayload));
+            
+            HttpResponse createBranchResponse = httpClient.execute(createBranchRequest);
+            int createBranchStatusCode = createBranchResponse.getStatusLine().getStatusCode();
+            
+            if (createBranchStatusCode == 201) {
+                System.out.println("Branch '" + branchName + "' created successfully.");
+            } else {
+                System.err.println("Failed to create branch. Status code: " + createBranchStatusCode);
+            }
+        } else {
+            System.err.println("Failed to clone repository. Status code: " + cloneStatusCode);
+        }
+    }
+}
