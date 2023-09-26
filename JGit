@@ -1,0 +1,28 @@
+import org.eclipse.jgit.api.CloneCommand;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+
+public class GitRepoManager {
+    public static void main(String[] args) {
+        try {
+            String repoUrl = "https://github.com/yourusername/yourrepository.git";
+            String localPath = "/path/to/local/directory";
+
+            // Create a Git clone command
+            CloneCommand cloneCommand = Git.cloneRepository()
+                    .setURI(repoUrl)
+                    .setDirectory(new File(localPath));
+
+            // Optionally, set credentials if needed (e.g., for private repositories)
+            // cloneCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider("username", "password"));
+
+            // Execute the clone operation
+            Git git = cloneCommand.call();
+
+            System.out.println("Repository cloned successfully: " + repoUrl);
+        } catch (GitAPIException e) {
+            e.printStackTrace();
+        }
+    }
+}
