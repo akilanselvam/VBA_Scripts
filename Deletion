@@ -1,0 +1,329 @@
+import jxl.Workbook;
+import jxl.format.Colour;
+import jxl.write.*;
+import jxl.write.biff.RowsExceededException;
+import java.io.*;
+import java.util.*;
+public class FilesMappingInExcel1 {
+
+    public static void main(String[] args) throws WriteException, IOException {
+        List<String> sourceRepoList = new ArrayList<>();
+        List<String> destinationRepoList = new ArrayList<>();
+        Map<String, List<String>> destinationReposFileMap = new HashMap<>();
+        Map<String, List<String>> destinationReposLineMap = new HashMap<>();
+        Map<String, List<String>> sourceReposFileMap = new HashMap<>();
+        Map<String, List<String>> sourceReposLineMap = new HashMap<>();
+        List<String> repoFileNames = new ArrayList<>();
+        WritableWorkbook workbook = null;
+
+        try {
+            BufferedReader fileListReader = new BufferedReader(new FileReader("D:\\SPRING\\Samp\\path_RR.txt"));
+            String repoFilePath;
+            while ((repoFilePath = fileListReader.readLine()) != null) {
+                sourceRepoList.add(repoFilePath);
+            }
+            fileListReader.close();
+
+            BufferedReader repoReader = new BufferedReader(new FileReader("D:\\SPRING\\Samp\\path_RD.txt"));
+            String repoLine;
+            while ((repoLine = repoReader.readLine()) != null) {
+                readRepoFileAndPopulateMaps(destinationReposFileMap,destinationReposLineMap, repoFileNames, repoLine);
+            }
+
+            BufferedReader repoDestReader = new BufferedReader(new FileReader("D:\\SPRING\\Samp\\path_RR.txt"));
+            String repoDestLine;
+            while ((repoDestLine = repoDestReader.readLine()) != null) {
+                readRepoFileAndPopulateMaps(sourceReposFileMap,sourceReposLineMap, repoFileNames, repoDestLine);
+            }
+
+
+            repoReader.close();
+            workbook = Workbook.createWorkbook(new File("D:\\SPRING\\Samp\\output.xls"));
+            reconFile(sourceRepoList, destinationReposFileMap,destinationReposLineMap, workbook);
+            findDuplicate(destinationReposFileMap,destinationReposLineMap, workbook);
+            updateFilesAndColorRows(workbook);
+            findUnmappedFiles(sourceReposFileMap,destinationReposFileMap,destinationReposLineMap,workbook);
+
+            workbook.write();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            workbook.close();
+        }
+    }
+
+    private static void findUnmappedFiles(Map<String, List<String>> sourceReposFileMap, Map<String, List<String>> destinationReposFileMap,
+                                          Map<String, List<String>> destinationReposLineMap, WritableWorkbook workbook) {
+        try {
+            String sheetName = "UnmappedFiles";
+            WritableSheet sheet = workbook.createSheet(sheetName, workbook.getNumberOfSheets());
+            int rowIndex = 1;
+            Label headerLabelA = new Label(0, 0, "UnmappedFileSourcePath");
+            Label headerLabelB = new Label(1, 0, "MappedRepo");
+            Label headerLabelC = new Label(2, 0, "ComparedStructure");
+            Label headerLabelD = new Label(3, 0, "SplitUpPath");
+            sheet.addCell(headerLabelA);
+            sheet.addCell(headerLabelB);
+            sheet.addCell(headerLabelC);
+            sheet.addCell(headerLabelD);
+
+            for (Map.Entry<String, List<String>> entry : destinationReposFileMap.entrySet()) {
+                String key = entry.getKey();
+                List<String> movedToRepos = entry.getValue();
+                List<String> movedToReposPath = destinationReposLineMap.getOrDefault(key, new ArrayList<>());
+                for (String destinationPath : movedToReposPath) {
+                    if (!sourceReposFileMap.containsKey(key)) {
+                        writeExcel(rowIndex++, destinationPath, String.join(",", movedToRepos), destinationPath, sheet, key, movedToReposPath);
+
+                        File sourceFileToDelete = new File(destinationPath);
+                        if (sourceFileToDelete.exists()) {
+                            if (sourceFileToDelete.delete()) {
+                                System.out.println("Deleted source file: " + destinationPath);
+                            } else {
+                                System.err.println("Failed to delete source file: " + destinationPath);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+    private static void updateFilesAndColorRows(WritableWorkbook workbook) {
+        try {
+            for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
+                WritableSheet sheet = workbook.getSheet(sheetIndex);
+                for (int rowIndex = 1; rowIndex <= sheet.getRows(); rowIndex++) {
+                    String sourceFilePath = sheet.getCell(0, rowIndex).getContents();
+                    String destinationFilePath = sheet.getCell(3, rowIndex).getContents();
+                    String mappedRepos = sheet.getCell(1, rowIndex).getContents();
+                    if (sourceFilePath.isEmpty() || destinationFilePath.isEmpty() || mappedRepos.isEmpty()) {
+                        continue;
+                    }
+                    String sourceFileName = new File(sourceFilePath).getName();
+                    String destinationFileName = new File(destinationFilePath).getName();
+                    String[] reposArray = mappedRepos.split(",");
+
+                    if (sourceFileName.equals(destinationFileName) && reposArray.length <= 1) {
+                        boolean success = copyFileContent(sourceFilePath, destinationFilePath);
+                        WritableCellFormat cellFormat = success ? getGreenCellStyle() : getRedCellStyle();
+                        sheet.addCell(new Label(0, rowIndex, sheet.getCell(0, rowIndex).getContents(), cellFormat));
+                        sheet.addCell(new Label(1, rowIndex, sheet.getCell(1, rowIndex).getContents(), cellFormat));
+                        sheet.addCell(new Label(2, rowIndex, sheet.getCell(2, rowIndex).getContents(), cellFormat));
+                        sheet.addCell(new Label(3, rowIndex, sheet.getCell(3, rowIndex).getContents(), cellFormat));
+                    } else {
+                        // If there is more than one key in MappedRepo or if file names don't match, color the row red
+                        sheet.addCell(new Label(0, rowIndex, sheet.getCell(0, rowIndex).getContents(), getRedCellStyle()));
+                        sheet.addCell(new Label(1, rowIndex, sheet.getCell(1, rowIndex).getContents(), getRedCellStyle()));
+                        sheet.addCell(new Label(2, rowIndex, sheet.getCell(2, rowIndex).getContents(), getRedCellStyle()));
+                        sheet.addCell(new Label(3, rowIndex, sheet.getCell(3, rowIndex).getContents(), getRedCellStyle()));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private static boolean copyFileContent(String sourceFilePath, String destinationFilePath) {
+
+        FileInputStream inputStream = null;
+        FileOutputStream outputStream = null;
+
+        try {
+            File sourceFile = new File(sourceFilePath);
+            File destinationFile = new File(destinationFilePath);
+            if (!sourceFile.exists()) {
+//                System.out.println("Source file does not exist: " + sourceFilePath);
+                return false;
+            }
+            inputStream = new FileInputStream(sourceFile);
+            outputStream = new FileOutputStream(destinationFile);
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+
+            System.out.println("File copied successfully from " + sourceFilePath + " to " + destinationFilePath);
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Error copying file from " + sourceFilePath + " to " + destinationFilePath);
+            return false;
+        } finally {
+            try {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static WritableCellFormat getGreenCellStyle() throws WriteException {
+        WritableCellFormat format = new WritableCellFormat();
+        format.setBackground(jxl.format.Colour.GREEN);
+        return format;
+    }
+
+    private static WritableCellFormat getRedCellStyle() throws WriteException {
+        WritableCellFormat format = new WritableCellFormat();
+        format.setBackground(jxl.format.Colour.RED);
+        return format;
+    }
+
+
+    private static void reconFile(List<String> SourceRepoList, Map<String, List<String>> destinationReposFileMap,Map<String, List<String>> destinationReposLineMap, WritableWorkbook workbook) {
+        try {
+            for (String sourceRepo : SourceRepoList) {
+                String sheetName = sourceRepo.substring(sourceRepo.lastIndexOf("\\") + 1, sourceRepo.lastIndexOf("."));
+                WritableSheet sheet = workbook.createSheet(sheetName, workbook.getNumberOfSheets());
+                BufferedReader reader = new BufferedReader(new FileReader(sourceRepo));
+                String line;
+                int rowIndex = 1;
+                Label headerLabelA = new Label(0, 0, "FileSourcePath");
+                Label headerLabelB = new Label(1, 0, "MappedRepo");
+                Label headerLabelC = new Label(2, 0, "ComparedStructure");
+                Label headerLabelD = new Label(2, 0, "SplitUpPath");
+                sheet.addCell(headerLabelA);
+                sheet.addCell(headerLabelB);
+                sheet.addCell(headerLabelC);
+                sheet.addCell(headerLabelD);
+                while ((line = reader.readLine()) != null) {
+                    String key = null;
+                    String fullPath = line.trim().replace("\\", "/");
+                    key = getFilewithPathSource(line);
+                    List<String> movedToRepos = destinationReposFileMap.getOrDefault(key, new ArrayList<>());
+                    List<String> movedToReposPath = destinationReposLineMap.getOrDefault(key, new ArrayList<>());
+                    writeExcel(rowIndex++, fullPath, String.join(",", movedToRepos), fullPath, sheet, key,movedToReposPath);
+
+                }
+                reader.close();
+                System.out.println("Excel file created successfully.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    private static void findDuplicate( Map<String, List<String>> destinationReposFileMap,Map<String, List<String>> destinationReposLineMap, WritableWorkbook workbook) {
+        try {
+            String key = null;
+            String sheetName = "DuplicateFileList";
+            WritableSheet sheet = workbook.createSheet(sheetName, workbook.getNumberOfSheets());
+            int rowIndex = 1;
+            Label headerLabelA = new Label(0, 0, "FileSourcePath");
+            Label headerLabelB = new Label(1, 0, "MappedRepo");
+            Label headerLabelC = new Label(2, 0, "ComparedStructure");
+            Label headerLabelD = new Label(3, 0, "DestinationPath");
+            sheet.addCell(headerLabelA);
+            sheet.addCell(headerLabelB);
+            sheet.addCell(headerLabelC);
+            sheet.addCell(headerLabelD);
+            List<String> movedToRepos = null;
+            for (Map.Entry<String, List<String>> entry : destinationReposFileMap.entrySet()) {
+                key = entry.getKey();
+                movedToRepos = entry.getValue();
+                List<String> movedToReposPath = destinationReposLineMap.getOrDefault(key, new ArrayList<>());
+                if (movedToRepos.size() >= 2) {
+                    writeExcel(rowIndex++, key, String.join(",", movedToRepos), key, sheet, key,movedToReposPath);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String getFilewithPathSource(String line) {
+        String key = null;
+        String fullPath = line.trim().replace("\\", "/");
+        String[] parts = fullPath.split("/");
+        StringBuilder res = new StringBuilder();
+        if (parts.length > 0) {
+            for (String part : parts) {
+                if (!part.contains(".") && (part.equals("ejbModule") || part.startsWith("eBBS_") ||
+                        part.startsWith("eGLEX_") || part.equals("Module") || part.equals("JavaSource") ||
+                        part.startsWith("eDEPOSITS_") || part.endsWith(" eDEPOSITS") || part.startsWith("SCB ") ||
+                        part.equals("Source") || part.equals("java") || part.equals("eGLEX") || part.equals("XMLS") ||
+                        part.equals("source") || part.equals("resources") || part.equals("webapp") ||
+                        part.equals("WebContent") || part.startsWith("eBRANCH_"))) {
+                    res.delete(0, res.length());
+                } else {
+                    res.append("/").append(part);
+                }
+            }
+            List<String> stringList = Arrays.asList(parts);
+            key = res.toString();
+            if (key.contains("META-INF") && (stringList.contains("src") || stringList.contains("ejbModule"))) {
+                int indexOfSrc = stringList.indexOf("src");
+                int indexOfEjbModule = stringList.indexOf("ejbModule");
+                if (indexOfSrc != -1) {
+                    key = "/"+parts[indexOfSrc - 1] + key;
+                } else if (indexOfEjbModule != -1) {
+                    key = "/"+parts[indexOfEjbModule - 1] + key;
+                }
+            }else if (key.contains("/SCB/") && (stringList.contains("Misc"))) {
+                int indexOfMisc = stringList.indexOf("Misc");
+                if (indexOfMisc != -1) {
+                    key = "/"+parts[indexOfMisc + 1] + key;
+                }
+            }else if (key.contains("/REPORTS/") && (stringList.contains("Misc"))) {
+                int indexOfMisc = stringList.indexOf("Misc");
+                if (indexOfMisc != -1) {
+                    key = "/"+parts[indexOfMisc + 1] + key;
+                }
+            }else if (key.contains("WEB-INF") && (stringList.contains("src") || stringList.contains("WebContent"))) {
+                int indexOfSrc = stringList.indexOf("src");
+                int indexOfWebContent = stringList.indexOf("WebContent");
+                if (indexOfSrc != -1) {
+                    key = "/"+parts[indexOfSrc - 1] + key;
+                } else if (indexOfWebContent != -1) {
+                    key = "/"+parts[indexOfWebContent - 1] + key;
+                }
+            }
+        }
+        return key;
+    }
+
+    private static void readRepoFileAndPopulateMaps(Map<String, List<String>> destinationReposRepoMap, Map<String, List<String>> destinationReposLineMap, List<String> destinationRepoName, String destinationRepoFileName) {
+        try {
+            String repo = destinationRepoFileName.substring(destinationRepoFileName.lastIndexOf("\\")+1);
+            BufferedReader reader = new BufferedReader(new FileReader(destinationRepoFileName));
+            reader.close();
+            destinationRepoName.add(repo);
+            reader = new BufferedReader(new FileReader(destinationRepoFileName));
+            String line;
+            while ((line = reader.readLine())!=null){
+                String key = getFilewithPathSource(line);
+                destinationReposRepoMap.computeIfAbsent(key, k -> new ArrayList<>()).add(repo);
+                destinationReposLineMap.computeIfAbsent(key, k -> new ArrayList<>()).add(line);
+            }
+            reader.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    private static void writeExcel(int rowindex, String keyFileName, String repoName,String fullPath, WritableSheet sheet, String key,List<String> repoPaths) throws RowsExceededException, WriteException {
+        Label label0 = new Label(0, rowindex, keyFileName);
+        Label label1 = new Label(2, rowindex, key);
+        Label label2 = new Label(1, rowindex, repoName);
+        int columnIndex = 3;
+        for (String repoPath : repoPaths) {
+            Label repoPathLabel = new Label(columnIndex, rowindex, repoPath);
+            sheet.addCell(repoPathLabel);
+            columnIndex++;
+        }
+        sheet.addCell(label0);
+        sheet.addCell(label2);
+        sheet.addCell(label1);
+    }
+}
