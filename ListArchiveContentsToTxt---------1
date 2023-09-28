@@ -1,0 +1,92 @@
+import java.io.*;
+import java.util.jar.*;
+import java.util.zip.*;
+import java.util.Enumeration;
+
+public class ListArchiveContentsToTxt {
+    public static void main(String[] args) {
+        // ... (Same as before)
+
+        try {
+            for (File archiveFile : archiveFiles) {
+                listArchiveContents(archiveFile, destinationDir);
+            }
+
+            System.out.println("Listing complete.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void listArchiveContents(File archiveFile, File destinationDir) throws IOException {
+        String archiveFileName = archiveFile.getName();
+        String txtFileName = archiveFileName.substring(0, archiveFileName.lastIndexOf('.')) + ".txt";
+        File txtFile = new File(destinationDir, txtFileName);
+
+        try (InputStream inputStream = new FileInputStream(archiveFile);
+             OutputStream outputStream = new FileOutputStream(txtFile)) {
+
+            if (archiveFileName.endsWith(".jar")) {
+                try (JarInputStream jarInputStream = new JarInputStream(inputStream);
+                     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
+
+                    JarEntry entry;
+                    while ((entry = jarInputStream.getNextJarEntry()) != null) {
+                        String entryPath = entry.getName();
+                        File entryFile = new File(destinationDir, entryPath);
+                        
+                        if (entry.isDirectory()) {
+                            entryFile.mkdirs(); // Create nested directories
+                        } else {
+                            // Create parent directories for files
+                            entryFile.getParentFile().mkdirs();
+                            
+                            // Write entry path to the text file
+                            writer.write(entryPath);
+                            writer.newLine();
+                            
+                            // Read and write entry content
+                            try (OutputStream entryOutputStream = new FileOutputStream(entryFile)) {
+                                byte[] buffer = new byte[1024];
+                                int bytesRead;
+                                while ((bytesRead = jarInputStream.read(buffer)) != -1) {
+                                    entryOutputStream.write(buffer, 0, bytesRead);
+                                }
+                            }
+                        }
+                    }
+                }
+            } else if (archiveFileName.endsWith(".zip")) {
+                try (ZipInputStream zipInputStream = new ZipInputStream(inputStream);
+                     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
+
+                    ZipEntry entry;
+                    while ((entry = zipInputStream.getNextEntry()) != null) {
+                        String entryPath = entry.getName();
+                        File entryFile = new File(destinationDir, entryPath);
+                        
+                        if (entry.isDirectory()) {
+                            entryFile.mkdirs(); // Create nested directories
+                        } else {
+                            // Create parent directories for files
+                            entryFile.getParentFile().mkdirs();
+                            
+                            // Write entry path to the text file
+                            writer.write(entryPath);
+                            writer.newLine();
+                            
+                            // Read and write entry content
+                            try (OutputStream entryOutputStream = new FileOutputStream(entryFile)) {
+                                byte[] buffer = new byte[1024];
+                                int bytesRead;
+                                while ((bytesRead = zipInputStream.read(buffer)) != -1) {
+                                    entryOutputStream.write(buffer, 0, bytesRead);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
