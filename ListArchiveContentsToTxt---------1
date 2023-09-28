@@ -5,7 +5,29 @@ import java.util.Enumeration;
 
 public class ListArchiveContentsToTxt {
     public static void main(String[] args) {
-        // ... (Same as before)
+        if (args.length != 2) {
+            System.err.println("Usage: java ListArchiveContentsToTxt <source_path> <destination_path>");
+            System.exit(1);
+        }
+
+        String sourcePath = args[0];
+        String destinationPath = args[1];
+
+        File sourceDir = new File(sourcePath);
+        File destinationDir = new File(destinationPath);
+
+        if (!sourceDir.isDirectory() || !destinationDir.isDirectory()) {
+            System.err.println("Both source and destination paths should be directories.");
+            System.exit(1);
+        }
+
+        File[] archiveFiles = sourceDir.listFiles((dir, name) ->
+                name.endsWith(".jar") || name.endsWith(".zip"));
+
+        if (archiveFiles == null || archiveFiles.length == 0) {
+            System.err.println("No JAR or ZIP files found in the source directory.");
+            System.exit(1);
+        }
 
         try {
             for (File archiveFile : archiveFiles) {
@@ -24,66 +46,26 @@ public class ListArchiveContentsToTxt {
         File txtFile = new File(destinationDir, txtFileName);
 
         try (InputStream inputStream = new FileInputStream(archiveFile);
-             OutputStream outputStream = new FileOutputStream(txtFile)) {
+             BufferedWriter writer = new BufferedWriter(new FileWriter(txtFile))) {
 
             if (archiveFileName.endsWith(".jar")) {
-                try (JarInputStream jarInputStream = new JarInputStream(inputStream);
-                     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
+                try (JarInputStream jarInputStream = new JarInputStream(inputStream)) {
 
                     JarEntry entry;
                     while ((entry = jarInputStream.getNextJarEntry()) != null) {
                         String entryPath = entry.getName();
-                        File entryFile = new File(destinationDir, entryPath);
-                        
-                        if (entry.isDirectory()) {
-                            entryFile.mkdirs(); // Create nested directories
-                        } else {
-                            // Create parent directories for files
-                            entryFile.getParentFile().mkdirs();
-                            
-                            // Write entry path to the text file
-                            writer.write(entryPath);
-                            writer.newLine();
-                            
-                            // Read and write entry content
-                            try (OutputStream entryOutputStream = new FileOutputStream(entryFile)) {
-                                byte[] buffer = new byte[1024];
-                                int bytesRead;
-                                while ((bytesRead = jarInputStream.read(buffer)) != -1) {
-                                    entryOutputStream.write(buffer, 0, bytesRead);
-                                }
-                            }
-                        }
+                        writer.write(entryPath);
+                        writer.newLine();
                     }
                 }
             } else if (archiveFileName.endsWith(".zip")) {
-                try (ZipInputStream zipInputStream = new ZipInputStream(inputStream);
-                     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
+                try (ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
 
                     ZipEntry entry;
                     while ((entry = zipInputStream.getNextEntry()) != null) {
                         String entryPath = entry.getName();
-                        File entryFile = new File(destinationDir, entryPath);
-                        
-                        if (entry.isDirectory()) {
-                            entryFile.mkdirs(); // Create nested directories
-                        } else {
-                            // Create parent directories for files
-                            entryFile.getParentFile().mkdirs();
-                            
-                            // Write entry path to the text file
-                            writer.write(entryPath);
-                            writer.newLine();
-                            
-                            // Read and write entry content
-                            try (OutputStream entryOutputStream = new FileOutputStream(entryFile)) {
-                                byte[] buffer = new byte[1024];
-                                int bytesRead;
-                                while ((bytesRead = zipInputStream.read(buffer)) != -1) {
-                                    entryOutputStream.write(buffer, 0, bytesRead);
-                                }
-                            }
-                        }
+                        writer.write(entryPath);
+                        writer.newLine();
                     }
                 }
             }
