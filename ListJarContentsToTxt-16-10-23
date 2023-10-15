@@ -1,0 +1,88 @@
+import java.io.*;
+import java.util.jar.*;
+import java.util.zip.*;
+import java.util.Enumeration;
+
+public class ListJarContentsToTxt {
+    public static void main(String[] args) {
+        String sourcePath = "D:\\SPRING\\Jar";
+        String destinationPath = "D:\\SPRING\\Jar";
+
+        File sourceDir = new File(sourcePath);
+        File destinationDir = new File(destinationPath);
+
+        if (!sourceDir.isDirectory() || !destinationDir.isDirectory()) {
+            System.err.println("Both source and destination paths should be directories.");
+            System.exit(1);
+        }
+
+        File[] archiveFiles = sourceDir.listFiles((dir, name) -> name.endsWith(".jar") || name.endsWith(".zip") || name.endsWith(".ear") || name.endsWith(".war"));
+
+        if (archiveFiles == null || archiveFiles.length == 0) {
+            System.err.println("No JAR, ZIP, EAR, or WAR files found in the source directory.");
+            System.exit(1);
+        }
+        try {
+            for (File archiveFile : archiveFiles) {
+                listArchiveContents(archiveFile, destinationDir, "");
+            }
+
+            System.out.println("Listing complete.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void listArchiveContents(File file, File destinationDir, String parentName) throws IOException {
+        String fileName = file.getName();
+        String txtFileName = fileName.substring(0, fileName.lastIndexOf('.')) + ".txt";
+        if (!parentName.isEmpty()) {
+            txtFileName = parentName + "_" + txtFileName;
+        }
+        File txtFile = new File(destinationDir, txtFileName);
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(txtFile))) {
+            if (fileName.endsWith(".zip") || fileName.endsWith(".ear") || fileName.endsWith(".war")) {
+                try (ZipFile zipFile = new ZipFile(file)) {
+                    Enumeration<? extends ZipEntry> entries = zipFile.entries();
+                    while (entries.hasMoreElements()) {
+                        ZipEntry entry = entries.nextElement();
+                        if (!entry.isDirectory()) {
+                            String entryPath = entry.getName();
+                            writer.write(entryPath);
+                            writer.newLine();
+                            if (entryPath.endsWith(".jar") || entryPath.endsWith(".war")) {
+                                writer.write("Nested JAR/WAR file: " + entryPath);
+                                writer.newLine();
+                                File nestedJarFile = new File(destinationDir, entryPath);
+                                try (InputStream is = zipFile.getInputStream(entry);
+                                     OutputStream os = new FileOutputStream(nestedJarFile)) {
+                                    byte[] buffer = new byte[1024];
+                                    int bytesRead;
+                                    while ((bytesRead = is.read(buffer)) != -1) {
+                                        os.write(buffer, 0, bytesRead);
+                                    }
+                                }
+                                listArchiveContents(nestedJarFile, destinationDir, txtFileName.substring(0, txtFileName.lastIndexOf('.')));
+                                // Delete the extracted JAR/WAR file
+                                nestedJarFile.delete();
+                            }
+                        }
+                    }
+                }
+            } else if (fileName.endsWith(".jar")) {
+                try (JarFile jar = new JarFile(file)) {
+                    Enumeration<JarEntry> entries = jar.entries();
+                    while (entries.hasMoreElements()) {
+                        JarEntry entry = entries.nextElement();
+                        if (!entry.isDirectory()) {
+                            String entryPath = entry.getName();
+                            writer.write(entryPath);
+                            writer.newLine();
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
