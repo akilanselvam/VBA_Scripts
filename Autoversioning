@@ -1,0 +1,92 @@
+ext {
+    def fetchLatestVersion = { group, artifact ->
+        def json = new groovy.json.JsonSlurper().parse(new URL("https://search.maven.org/solrsearch/select?q=g:%22$group%22+AND+a:%22$artifact%22&wt=json"))
+        def latestVersion = json.response.docs[0].latestVersion
+        println "Latest Guava Version: $latestVersion"
+
+        def versionInfo = new groovy.json.JsonSlurper().parseText(new URL("https://your_api_url_here").text) // Replace with your API URL
+        def lastChild = versionInfo.children.find { it.folder == false } // Find the last non-folder child
+
+        if (lastChild) {
+            // Extract the version number from the URI
+            def uri = lastChild.uri
+            def versionNumber = uri.tokenize("/").last()
+            println "Latest $group:$artifact Version: $versionNumber"
+            versionNumber // Return the extracted version
+        } else {
+            println "No version found in the JSON structure."
+            latestVersion // Return the latest version from the Maven Central Repository as a fallback
+        }
+    }
+
+    guavaVersion = fetchLatestVersion("com.google.guava", "guava")
+    junitVersion = '5.5.2'
+}
+
+
+ext {
+    def fetchLatestVersion = { group, artifact ->
+     def json = new groovy.json.JsonSlurper().parse(new URL("https://search.maven.org/solrsearch/select?q=g:%22$group%22+AND+a:%22$artifact%22&wt=json"))
+        def latestVersion = json.response.docs[0].latestVersion
+        println "Latest Guava Version: $latestVersion"
+       // def query = "https://search.maven.org/solrsearch/select?q=g:\"$group\"+AND+a:\"$artifact\"&wt=json"
+       // def json = new groovy.json.JsonSlurper().parse(new URL(query))
+       // def latestVersion = json.response.docs[0].latestVersion
+        println "Latest: $group:$artifact:$latestVersion"
+        latestVersion // Return the latest version
+    }
+
+    guavaVersion = fetchLatestVersion("com.google.guava", "guava")
+    junitVersion = '5.5.2'
+}
+
+
+
+plugins {
+    id 'java'
+    id 'application'
+}
+
+
+repositories {
+    jcenter()
+}
+
+
+
+apply from: 'version-catalog.gradle'
+dependencies {
+    implementation "com.google.guava:guava:${guavaVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+}
+
+application {
+    mainClassName = 'simple.gradle.java.app.App'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+version = getProjectVersion(rootProject.name)
+
+def getProjectVersion(projectName) {
+    def currentDate = new Date().format('ddMMyyHHmmssSSS')
+    return "${projectName}-${currentDate}"
+}
+
+jar {
+    archiveBaseName = getProjectVersion(project.name)
+    archiveVersion = ''
+}
+
+task projectupper {
+    group = 'Custom Tasks'
+    description = 'Task to get Project Name and Convert it to uppercase'
+    doLast {
+        String projectName = project.name
+        println "Project Name: $projectName"
+        println "Upper case: ${projectName.toUpperCase()}"
+    }
+}
