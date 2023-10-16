@@ -112,3 +112,73 @@ ext {
     guavaVersion = fetchLatestVersion("com.google.guava", "guava")
     junitVersion = '5.5.2'
 }
+
+***********************************************************************************************************************
+
+plugins {
+    id 'java'
+    id 'application'
+}
+
+repositories {
+    jcenter()
+}
+
+apply from: 'version-catalog.gradle'
+
+// Read buildNextVersion from gradle.properties
+def buildVersion = project.findProperty("buildNextVersion") ?: "1"
+
+dependencies {
+    implementation "com.google.guava:guava:${guavaVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+}
+
+application {
+    mainClassName = 'simple.gradle.java.app.App'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+version = getProjectVersion(rootProject.name)
+
+def getProjectVersion(projectName) {
+    def currentDate = new Date().format('ddMMyyHHmmssSSS')
+    return "${projectName}-${currentDate}"
+}
+
+
+// Configure JAR task to use buildNextVersion for archiveBaseName
+jar {
+    dependsOn 'updatebuildNextVersion' // Update buildNextVersion before JAR task
+    archiveBaseName = getProjectVersion(project.name) + "-$buildVersion"
+    archiveVersion = ''
+}
+
+
+// Define a task to update buildNextVersion
+task updatebuildNextVersion {
+    group = 'Custom Tasks'
+    description = 'Task to update buildNextVersion'
+    doLast {
+        def currentVersion = Integer.parseInt(buildNextVersion)
+        buildNextVersion = (currentVersion + 1).toString()
+        // Save the updated buildNextVersion back to gradle.properties
+        def propertiesFile = file("${rootProject.projectDir}/gradle.properties")
+        propertiesFile.text = "buildNextVersion=${buildNextVersion}"
+    }
+}
+
+task projectupper {
+    group = 'Custom Tasks'
+    description = 'Task to get Project Name and Convert it to uppercase'
+    doLast {
+        String projectName = project.name
+        println "Project Name: $projectName"
+        println "Upper case: ${projectName.toUpperCase()}"
+    }
+}
+*******************************************************************************************************************************************************
