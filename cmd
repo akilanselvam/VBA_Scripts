@@ -1,17 +1,22 @@
-data=$(curl -s "")
+# Retrieve the JSON data using Invoke-WebRequest
+$jsonResponse = (Invoke-WebRequest -Uri "").Content
+
+# Parse JSON using ConvertFrom-Json
+$jsonData = $jsonResponse | ConvertFrom-Json
 
 # Extract the latest version
-latest_version=""
-while read -r line; do
-  if [[ $line == *"\"uri\": \"/"* && $line != *"maven-metadata.xml"* ]]; then
-    version="${line##*/}"
-    if [[ -z $latest_version || "$version" > "$latest_version" ]]; then
-      latest_version="$version"
-    fi
-  fi
-done <<< "$data"
+$latestVersion = $null
+foreach ($child in $jsonData.children) {
+    if ($child.uri -match '/\d+\.\d+\.\d+/') {
+        $version = $child.uri -replace '/', ''
+        if ($latestVersion -eq $null -or [Version]::new($version) -gt [Version]::new($latestVersion)) {
+            $latestVersion = $version
+        }
+    }
+}
 
-echo "Latest Version: $latest_version"
+# Output the latest version
+Write-Host "Latest Version: $latestVersion"
 
 | tr -d '",' | awk -F ': ' '/uri/ {print $2}' | awk -F'/' '{print $2}' | sort -V | tail -n 1
 
