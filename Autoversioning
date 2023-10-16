@@ -90,3 +90,25 @@ task projectupper {
         println "Upper case: ${projectName.toUpperCase()}"
     }
 }
+
+
+def fetchJsonData(group, artifact) {
+    def apiUrl = "https://search.maven.org/solrsearch/select?q=g:\"$group\"+AND+a:\"$artifact\"&wt=json"
+    def json = new groovy.json.JsonSlurper().parse(new URL(apiUrl))
+    return json
+}
+
+
+ext {
+    def urlFetcher = new GroovyScript("UrlFetcher.groovy")
+    
+    def fetchLatestVersion = { group, artifact ->
+        def json = urlFetcher.fetchJsonData(group, artifact)
+        def latestVersion = json.response.docs[0].latestVersion
+        println "Latest $group:$artifact Version: $latestVersion"
+        latestVersion // Return the latest version
+    }
+
+    guavaVersion = fetchLatestVersion("com.google.guava", "guava")
+    junitVersion = '5.5.2'
+}
