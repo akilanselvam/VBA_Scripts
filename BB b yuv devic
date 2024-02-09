@@ -1,0 +1,33 @@
+@echo off
+setlocal enabledelayedexpansion
+
+REM Define Azure DevOps organization, project, and repository information
+set organization=YourOrganization
+set project=YourProject
+set repositories=("repo1" "repo2")  REM Replace with your repository names
+
+REM Define personal access token (PAT)
+set pat=YourPersonalAccessToken
+
+REM Define branch names
+set featureBranch=feature-branch
+set releaseBranch=release-branch
+
+REM Loop through repositories
+for %%i in %repositories% do (
+    set repoUrl=https://dev.azure.com/%organization%/%project%/_git/%%i
+    echo Processing repository: !repoUrl!
+
+    REM Create a pull request using Azure DevOps REST API
+    curl -X POST -H "Content-Type: application/json" -H "Authorization: Basic %pat%" ^
+    -d "{^
+        `"sourceRefName`": `"refs/heads/%featureBranch%`",^
+        `"targetRefName`": `"refs/heads/%releaseBranch%`",^
+        `"title`": `"Your PR Title`",^
+        `"description`": `"Description of your changes`"^
+    }" ^
+    !repoUrl!"/_apis/pullrequest/repositories/%organization%/%project%/pullrequests?api-version=7.1"
+
+    REM Optionally, you can add a delay to avoid rate limits or other issues
+    timeout /t 5 /nobreak
+)
