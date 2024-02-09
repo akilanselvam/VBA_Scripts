@@ -1,0 +1,31 @@
+@echo off
+setlocal enabledelayedexpansion
+
+REM Define repository URLs
+set repositories=("https://dev.azure.com/organization/repo1/_git/repo1" "https://dev.azure.com/organization/repo2/_git/repo2")
+
+REM Define branch names
+set featureBranch=feature-branch
+set releaseBranch=release-branch
+
+REM Loop through repositories
+for %%i in %repositories% do (
+    echo Processing repository: %%i
+    cd "C:\Path\To\Local\Clone" REM Replace with the local path to your cloned repository
+    git clone %%i
+    cd "repo" REM Replace with the actual repository folder name
+
+    REM Create and switch to the feature branch
+    git checkout -b %featureBranch%
+
+    REM Make and commit your changes here
+
+    REM Push the feature branch to Azure Repos
+    git push origin %featureBranch%
+
+    REM Create a pull request (assuming your Azure DevOps organization and project are specified in the remote URL)
+    git request-pull origin/%releaseBranch% origin/%featureBranch% > pull-request.txt
+
+    REM Optionally, you can add a delay to avoid rate limits or other issues
+    timeout /t 5 /nobreak
+)
