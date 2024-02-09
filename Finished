@@ -1,0 +1,1 @@
+curl -X POST -H "Authorization: Basic {BASE64_ENCODED_PAT}" -H "Content-Type: application/json" -d '{"sourceRefName":"refs/heads/{FEATURE_BRANCH}","targetRefName":"refs/heads/{RELEASE_BRANCH}","title":"Feature: {FEATURE_BRANCH}","description":"Description here"}' "https://dev.azure.com/{ORGANIZATION}/{PROJECT}/_apis/pullrequest/repos/{REPO_ID}/pullrequests?api-version=6.0"
