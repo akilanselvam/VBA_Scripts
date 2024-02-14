@@ -1,0 +1,20 @@
+def fetchLatestVersion = {
+    def group = "gradle-release/rcb/allas/build"
+    def artifact = "rcb-atlas-interface-dto"
+    def metadataUrl = "https://artifactory.global.standardchartered.com/artifactory/${group}/${artifact}/maven-metadata.xml"
+
+    try {
+        def metadataXml = new URL(metadataUrl).text
+        def xml = new XmlParser().parseText(metadataXml)
+        def latestVersion = xml.versioning.latest.text()
+
+        println "Latest version for ${group}:${artifact} is ${latestVersion}"
+        return latestVersion
+    } catch (Exception e) {
+        println "Error fetching latest version: ${e.message}"
+        return null
+    }
+}
+
+// Example usage
+fetchLatestVersion()
