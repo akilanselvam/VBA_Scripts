@@ -1,0 +1,41 @@
+import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
+import com.opencsv.exceptions.CsvException;
+import org.apache.commons.lang3.ObjectUtils;  // Add this import
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.List;
+
+public class CsvHtmlContentProcessor {
+
+    public static void main(String[] args) throws CsvException {
+        try {
+            String csvFilePath = "C:\\Users\\selva\\Downloads\\BookData1.csv";
+            CSVReader csvReader = new CSVReader(new FileReader(csvFilePath));
+            List<String[]> rows = csvReader.readAll();
+            csvReader.close();
+            for (String[] row : rows) {
+                int columnIndex = 6;
+                String htmlContent = row[columnIndex];
+                String textContent = cleanHtml(htmlContent);
+                row[columnIndex] = textContent;
+            }
+            CSVWriter csvWriter = new CSVWriter(new FileWriter("C:\\Users\\selva\\Downloads\\BookData1.csv"));
+            csvWriter.writeAll(rows);
+            csvWriter.close();
+            System.out.println("HTML content replaced successfully.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String cleanHtml(String htmlContent) {
+        Document document = Jsoup.parse(htmlContent);
+        return document.text();
+    }
+}
