@@ -1,0 +1,80 @@
+import mockit.*;
+import org.junit.*;
+import static org.junit.Assert.*;
+
+public class BlockTransactionSessionBeanTest {
+
+    @Test
+    public void testFetchForAuthorisations(@Mocked LogWriter logWriter,
+                                           @Mocked StaticDataCache staticDataCache,
+                                           @Mocked SystemWrapper sysWrapper,
+                                           @Mocked TBlockTransactionHome tBlockTransactionHome,
+                                           @Mocked TBlockTransactionEntity tblkEntity,
+                                           @Mocked BlockTransactionWrapper blkWrapper,
+                                           @Mocked UserDetail usrDetail) throws Exception {
+        // Mock dependencies and expectations
+        new Expectations() {{
+            // Mock behavior for LogWriter
+            LogWriter.getInstance(anyString, anyString);
+            result = logWriter;
+
+            // Mock behavior for StaticDataCache
+            StaticDataCache.getInstance();
+            result = staticDataCache;
+
+            // Mock behavior for getSystemWrapper
+            staticDataCache.getSystemWrapper();
+            result = sysWrapper;
+
+            // Mock behavior for systemDate
+            sysWrapper.systemDate;
+            result = new Date(); // Provide a dummy system date
+
+            // Mock behavior for findByPrimaryKey method of TBlockTransactionHome
+            tBlockTransactionHome.findByPrimaryKey(withInstanceOf(TBlockTransactionEntityKey.class));
+            result = tblkEntity;
+
+            // Mock behavior for getWrapper method of TBlockTransactionEntity
+            tblkEntity.getWrapper();
+            result = blkWrapper;
+
+            // Mock behavior for getUsrDtl method of BlockTransactionWrapper
+            blkWrapper.getUsrDtl();
+            result = usrDetail;
+        }};
+
+        // Initialize the class under test
+        BlockTransactionSessionBean sessionBean = new BlockTransactionSessionBean();
+
+        // Prepare input data
+        AbstractWrapper wrapper = new AbstractWrapper(); // Initialize with necessary values
+
+        // Call the method under test
+        sessionBean.fetchForAuthorisations(wrapper);
+
+        // Verify interactions
+        new Verifications() {{
+            // Verify expected interactions with dependencies
+            LogWriter.getInstance(anyString, anyString);
+            times = 1;
+
+            StaticDataCache.getInstance();
+            times = 1;
+
+            staticDataCache.getSystemWrapper();
+            times = 1;
+
+            sysWrapper.systemDate;
+            times = 1;
+
+            tBlockTransactionHome.findByPrimaryKey(withInstanceOf(TBlockTransactionEntityKey.class));
+            times = 1;
+
+            tblkEntity.getWrapper();
+            times = 1;
+
+            blkWrapper.getUsrDtl();
+            times = 1;
+        }};
+    }
+}
