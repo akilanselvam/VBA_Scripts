@@ -1,0 +1,86 @@
+import mockit.*;
+import org.junit.*;
+import static org.junit.Assert.*;
+
+public class BlockTransactionSessionBeanTest {
+
+    @Test
+    public void testFetchForAuthorisations(@Mocked LogWriter logWriter,
+                                           @Mocked StaticDataCache staticDataCache,
+                                           @Mocked SystemWrapper sysWrapper,
+                                           @Mocked TBlockTransactionHome tBlockTransactionHome,
+                                           @Mocked BlockTransactionWrapper blkWrapper,
+                                           @Mocked SubsidiaryAccountHome acHome,
+                                           @Mocked SubsidiaryAccountEntity acEntity,
+                                           @Mocked ProductHome prdHome,
+                                           @Mocked ProductEntity prdEntity,
+                                           @Mocked PendulumWrapper prdWrapper) throws Exception {
+        // Mock dependencies and expectations
+        new Expectations() {{
+            LogWriter.getInstance(anyString, anyString);
+            result = logWriter;
+
+            StaticDataCache.getInstance();
+            result = staticDataCache;
+
+            staticDataCache.getSystemWrapper();
+            result = sysWrapper;
+
+            sysWrapper.systemDate;
+            result = new Date(); // Provide a dummy system date
+
+            // Mock behavior for findByPrimaryKey method of TBlockTransactionHome
+            tBlockTransactionHome.findByPrimaryKey(withInstanceOf(TBlockTransactionEntityKey.class));
+            result = blkWrapper;
+
+            // Mock behavior for findByPrimaryKey method of SubsidiaryAccountHome
+            acHome.findByPrimaryKey(withInstanceOf(SubsidiaryAccountEntityKey.class));
+            result = acEntity;
+
+            // Mock behavior for findByPrimaryKey method of ProductHome
+            prdHome.findByPrimaryKey(withInstanceOf(ProductEntityKey.class));
+            result = prdEntity;
+
+            // Mock behavior for getWrapper method of SubsidiaryAccountEntity
+            acEntity.getWrapper();
+            result = prdWrapper;
+        }};
+
+        // Initialize the class under test
+        BlockTransactionSessionBean sessionBean = new BlockTransactionSessionBean();
+
+        // Prepare input data
+        AbstractWrapper wrapper = new AbstractWrapper(); // Initialize with necessary values
+
+        // Call the method under test
+        sessionBean.fetchForAuthorisations(wrapper);
+
+        // Verify interactions
+        new Verifications() {{
+            // Verify expected interactions with dependencies
+            LogWriter.getInstance(anyString, anyString);
+            times = 1;
+
+            StaticDataCache.getInstance();
+            times = 1;
+
+            staticDataCache.getSystemWrapper();
+            times = 1;
+
+            sysWrapper.systemDate;
+            times = 1;
+
+            tBlockTransactionHome.findByPrimaryKey(withInstanceOf(TBlockTransactionEntityKey.class));
+            times = 1;
+
+            acHome.findByPrimaryKey(withInstanceOf(SubsidiaryAccountEntityKey.class));
+            times = 1;
+
+            prdHome.findByPrimaryKey(withInstanceOf(ProductEntityKey.class));
+            times = 1;
+
+            acEntity.getWrapper();
+            times = 1;
+        }};
+    }
+}
