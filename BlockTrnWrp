@@ -1,0 +1,68 @@
+import mockit.Expectations;
+import mockit.Injectable;
+import mockit.Tested;
+import org.junit.Assert;
+import org.junit.Test;
+import scb.exception.DuplicateKeyException;
+import scb.exception.SCBApplicationException;
+import scb.util.LogWriter;
+
+public class BlockTransactionTest {
+
+    @Tested
+    private BlockTransaction blockTransaction;
+
+    @Injectable
+    private BlockTransactionHome mockBlockTransactionHome;
+
+    @Injectable
+    private BlockTransactionWrapper mockWrapper;
+
+    @Injectable
+    private BlockTransactionEntity mockTransactionEntity;
+
+    @Injectable
+    private LogWriter mockLogWriter;
+
+    @Test
+    public void testCreateBlock_Success() throws SCBApplicationException {
+        new Expectations() {{
+            mockBlockTransactionHome.create(mockWrapper);
+            result = mockTransactionEntity;
+        }};
+
+        Serializable result = blockTransaction.create(mockWrapper);
+
+        Assert.assertEquals(mockWrapper, result);
+    }
+
+    @Test(expected = SCBApplicationException.class)
+    public void testCreateBlock_DuplicateKeyException() throws SCBApplicationException {
+        new Expectations() {{
+            mockBlockTransactionHome.create(mockWrapper);
+            result = new DuplicateKeyException("Duplicate key");
+        }};
+
+        blockTransaction.create(mockWrapper);
+    }
+
+    @Test(expected = SCBApplicationException.class)
+    public void testCreateBlock_CreateException() throws SCBApplicationException {
+        new Expectations() {{
+            mockBlockTransactionHome.create(mockWrapper);
+            result = new CreateException("Create exception");
+        }};
+
+        blockTransaction.create(mockWrapper);
+    }
+
+    @Test(expected = SCBApplicationException.class)
+    public void testCreateBlock_GeneralException() throws SCBApplicationException {
+        new Expectations() {{
+            mockBlockTransactionHome.create(mockWrapper);
+            result = new RuntimeException("General exception");
+        }};
+
+        blockTransaction.create(mockWrapper);
+    }
+}
