@@ -1,0 +1,48 @@
+import mockit.Expectations;
+import mockit.Mocked;
+import org.junit.Test;
+
+public class BlockExistenceTest {
+
+    @Mocked
+    BlockTrnHome blkTrnHome;
+
+    @Mocked
+    TBlockTrnHome tBlkTrnHome;
+
+    @Test
+    public void testCheckBlockExistence() throws Exception {
+        // Mocking behavior for blkTrnHome
+        new Expectations() {{
+            blkTrnHome.findByAccountAndBlockType(anyString, anyString, anyInt);
+            result = new Enumeration() {
+                boolean hasMoreElements() { return true; }
+                Object nextElement() { return new Object(); }
+            };
+        }};
+
+        // Mocking behavior for tBlkTrnHome
+        new Expectations() {{
+            tBlkTrnHome.findByReferenceNoAndBlockType(anyString, anyString, anyInt);
+            result = new Enumeration() {
+                boolean hasMoreElements() { return true; }
+                Object nextElement() { return new Object(); }
+            };
+        }};
+
+        // Call the method under test
+        BlockTransactionWrapper blkWrapper = new BlockTransactionWrapper(/* provide necessary parameters */);
+        Object[] result = checkBlockExistence(blkWrapper);
+
+        // Add assertions based on the expected behavior
+        // For example, assert the length of the result array or specific values in it
+    }
+
+    // Define the original method to be tested
+    public Object[] checkBlockExistence(BlockTransactionWrapper blkWrapper) {
+        // Implementation of the method
+        // You can copy the original method implementation here
+        // Remember to handle exceptions and return appropriate values
+        return null; // Placeholder return, replace with actual implementation
+    }
+}
