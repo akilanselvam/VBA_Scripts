@@ -1,0 +1,244 @@
+import java.io.*;
+
+public class JarProgramExecutor {
+
+    public static void main(String[] args) {
+        // Step 1: Execute JarExtractor
+        executeJarExtractor();
+
+        // Step 2: Execute ContentPathLister
+        executeContentPathLister();
+
+        // Step 3: Execute FileSeparator
+        executeFileSeparator();
+    }
+
+    public static void executeJarExtractor() {
+        // Your JarExtractor code here
+        JarExtractor.main(new String[]{});
+    }
+
+    public static void executeContentPathLister() {
+        // Your ContentPathLister code here
+        ContentPathLister.main(new String[]{});
+    }
+
+    public static void executeFileSeparator() {
+        // Your FileSeparator code here
+        FileSeparator.main(new String[]{});
+    }
+}
+----------------------------------------------------
+import java.io.*;
+import java.util.Enumeration;
+import java.util.jar.*;
+import java.util.zip.*;
+
+public class JarExtractor {
+    public static void main(String[] args) {
+        
+        String inputFolderPath = "E:\\ZipFiles"; 
+        String outputFolderPath = "E:\\12\\123";
+        
+        File inputFolder = new File(inputFolderPath);
+        File outputFolder = new File(outputFolderPath);
+        
+        if (!inputFolder.exists() || !inputFolder.isDirectory()) {
+            System.out.println("Input folder does not exist or is not a directory.");
+            return;
+        }
+        
+        if (!outputFolder.exists()) {
+            outputFolder.mkdirs();
+        }
+        
+        processFolder(inputFolder, outputFolder);
+    }
+    
+    private static void processFolder(File inputFolder, File outputFolder) {
+        File[] files = inputFolder.listFiles();
+        
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    processFolder(file, outputFolder);
+                } else if (file.isFile() && file.getName().toLowerCase().endsWith(".jar")) {
+                    extractJar(file, outputFolder);
+                }
+            }
+        }
+    }
+    
+    private static void extractJar(File jarFile, File outputFolder) {
+        try (JarFile jar = new JarFile(jarFile)) {
+            String jarName = jarFile.getName();
+            String outputFolderName = outputFolder.getAbsolutePath() + File.separator + getParentFolders(jarFile);
+            outputFolderName += File.separator + jarName.substring(0, jarName.lastIndexOf('.'));
+            outputFolderName += "_extracted";
+            
+            File extractFolder = new File(outputFolderName);
+            extractFolder.mkdirs();
+            
+            Enumeration<JarEntry> entries = jar.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                File entryFile = new File(extractFolder, entry.getName());
+                
+                if (entry.isDirectory()) {
+                    entryFile.mkdirs();
+                } else {
+                    try (InputStream is = jar.getInputStream(entry);
+                         OutputStream os = new FileOutputStream(entryFile)) {
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
+                        while ((bytesRead = is.read(buffer)) != -1) {
+                            os.write(buffer, 0, bytesRead);
+                        }
+                    }
+                }
+            }
+            
+            System.out.println("Extracted: " + jarName + " to " + extractFolder.getAbsolutePath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String getParentFolders(File file) {
+        String parentFolders = "";
+        File parent = file.getParentFile();
+        while (parent != null) {
+            parentFolders = parent.getName() + File.separator + parentFolders;
+            parent = parent.getParentFile();
+        }
+        return parentFolders;
+    }
+
+}
+-----------------------------------------------------------------------
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
+
+public class ContentPathLister {
+    public static void main(String[] args) {
+        String destinationPath = "E:\\12\\Text"; // Change this to your destination folder
+        String sourceLocation = "E:\\12\\123"; // Change this to your source location
+
+        listContentPaths(sourceLocation, destinationPath);
+    }
+
+    public static void listContentPaths(String sourceLocation, String destinationPath) {
+        File sourceFolder = new File(sourceLocation);
+        if (!sourceFolder.exists() || !sourceFolder.isDirectory()) {
+            System.err.println("Source location does not exist or is not a directory.");
+            return;
+        }
+
+        List<File> subFolders = new ArrayList<>();
+        List<File> files = new ArrayList<>();
+
+        for (File file : sourceFolder.listFiles()) {
+            if (file.isDirectory()) {
+                subFolders.add(file);
+            } else {
+                files.add(file);
+            }
+        }
+
+        String folderName = sourceFolder.getName();
+        File outputFile = new File(destinationPath + File.separator + folderName + ".txt");
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
+            for (File file : files) {
+                writer.write(file.getAbsolutePath());
+                writer.newLine();
+            }
+            System.out.println("Content paths listed and saved to: " + outputFile.getAbsolutePath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        for (File subFolder : subFolders) {
+            outputFile = new File(destinationPath + File.separator + subFolder.getName() + ".txt");
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
+                List<String> contentPaths = new ArrayList<>();
+                listFilesRecursively(subFolder, contentPaths);
+                for (String path : contentPaths) {
+                    writer.write(path);
+                    writer.newLine();
+                }
+                System.out.println("Content paths listed and saved to: " + outputFile.getAbsolutePath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void listFilesRecursively(File folder, List<String> contentPaths) {
+        File[] files = folder.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    listFilesRecursively(file, contentPaths);
+                } else {
+                    contentPaths.add(file.getAbsolutePath());
+                }
+            }
+        }
+    }
+}
+------------------------------------------------------------
+import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
+
+public class FileSeparator {
+
+    public static void main(String[] args) {
+    	String inputFolderPath = "E:\\12\\Text";
+    	String outputFolderPath = "E:\\12\\OutputText";
+    	   
+        separateFiles(inputFolderPath, outputFolderPath);
+    }
+
+    public static void separateFiles(String inputFolderPath, String outputFolderPath) {
+        File inputFolder = new File(inputFolderPath);
+        File[] txtFiles = inputFolder.listFiles((dir, name) -> name.endsWith(".txt"));
+
+        if (txtFiles == null) {
+            System.err.println("No text files found in the input folder.");
+            return;
+        }
+
+        for (File txtFile : txtFiles) {
+            Map<String, BufferedWriter> writers = new HashMap<>();
+            try (BufferedReader reader = new BufferedReader(new FileReader(txtFile))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split("_extracted");
+                    if (parts.length == 2) {
+                    	String[] folders = parts[0].split("\\\\");
+                    	String folderName = folders[folders.length - 3] + "_" + folders[folders.length - 2] + "_" +parts[0].substring(parts[0].lastIndexOf("\\") + 1);
+//                        String folderName = parts[0].substring(parts[0].lastIndexOf("\\") + 1);
+                        String outputPath = outputFolderPath + "\\" + folderName + ".txt";
+                        writers.putIfAbsent(outputPath, new BufferedWriter(new FileWriter(outputPath, true)));
+                        BufferedWriter writer = writers.get(outputPath);
+                        writer.write(line);
+                        writer.newLine();
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                for (BufferedWriter writer : writers.values()) {
+                    try {
+                        writer.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+}
