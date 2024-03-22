@@ -1,0 +1,82 @@
+import java.io.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+public class FileSeparator {
+
+    public static void main(String[] args) {
+        String inputFolderPath = "E:\\12\\Text";
+        String outputFolderPath = "E:\\12\\OutputText";
+
+        separateFiles(inputFolderPath, outputFolderPath);
+    }
+
+    public static void separateFiles(String inputFolderPath, String outputFolderPath) {
+        File inputFolder = new File(inputFolderPath);
+        File[] txtFiles = inputFolder.listFiles((dir, name) -> name.endsWith(".txt"));
+
+        if (txtFiles == null) {
+            System.err.println("No text files found in the input folder.");
+            return;
+        }
+
+        Set<String> uniqueParts = new HashSet<>();
+        Set<String> outputFiles = new HashSet<>();
+
+        for (File txtFile : txtFiles) {
+            Map<String, BufferedWriter> writers = new HashMap<>();
+            try (BufferedReader reader = new BufferedReader(new FileReader(txtFile))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split("_extracted");
+                    if (parts.length == 2) {
+                        String[] folders = parts[0].split("\\\\");
+                        String folderName = folders[folders.length - 3] + "_" + folders[folders.length - 2] + "_" + parts[0].substring(parts[0].lastIndexOf("\\") + 1);
+                        uniqueParts.add(parts[0].substring(parts[0].lastIndexOf("\\") + 1));
+                        String outputPath = outputFolderPath + "\\" + folderName + ".txt";
+                        writers.putIfAbsent(outputPath, new BufferedWriter(new FileWriter(outputPath, true)));
+                        BufferedWriter writer = writers.get(outputPath);
+                        writer.write(line);
+                        writer.newLine();
+                        outputFiles.add(folderName);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                for (BufferedWriter writer : writers.values()) {
+                    try {
+                        writer.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        // Write unique parts to a file
+        try (BufferedWriter conditionWriter = new BufferedWriter(new FileWriter(outputFolderPath + "\\conditions.txt"))) {
+        	conditionWriter.write("equalsConditions=");
+        	for (String part : uniqueParts) {
+                conditionWriter.write(part);
+                conditionWriter.write(",");
+            }
+            conditionWriter.newLine();
+
+            // Add three empty lines
+            conditionWriter.newLine();
+            conditionWriter.newLine();
+            conditionWriter.newLine();
+
+            conditionWriter.write("repoSrcList=");
+            for (String outputFile : outputFiles) {
+                conditionWriter.write(outputFile);
+                conditionWriter.write(",");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
