@@ -1,0 +1,53 @@
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class PullRequestCreator {
+
+    public static void main(String[] args) {
+        String repos = "repo1,repo2,repo3"; // Comma-separated list of repository names
+        String[] repoNames = repos.split(",");
+
+        String sourceRefName = "refs/heads/feature/latest_source_movement_4.1.im";
+        String targetRefName = "refs/heads/release/ATLAS.4.1.im";
+        String title = "#1576136 - Latest Source Movement";
+        String description = "#1576136";
+        String workItemId = "1576136";
+
+        for (String repoName : repoNames) {
+            String apiUrl = "https://iqkli3xzmrjd51hrnedqqkyxeee7yighao6vph2onljedxgzni6a@dev.azure.com/sc-ado/PDBQPR/_apis/git/repositories/"
+                    + repoName + "/pullrequests?api-version-7.1-previer.1";
+
+            try {
+                URL url = new URL(apiUrl);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setDoOutput(true);
+
+                String payload = "{\n" +
+                        "\"sourceRefName\": \"" + sourceRefName + "\",\n" +
+                        "\"targetRefName\": \"" + targetRefName + "\",\n" +
+                        "\"title\": \"" + title + "\",\n" +
+                        "\"description\": \"" + description + "\",\n" +
+                        "\"workItemRefs\": [{\n" +
+                        "\"id\": \"" + workItemId + "\"\n" +
+                        "}]\n" +
+                        "}";
+
+                conn.getOutputStream().write(payload.getBytes());
+                conn.getOutputStream().flush();
+
+                int responseCode = conn.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_CREATED) {
+                    System.out.println("Pull request created successfully for repository: " + repoName);
+                } else {
+                    System.out.println("Failed to create pull request for repository: " + repoName + ". Response code: " + responseCode);
+                }
+            } catch (IOException e) {
+                System.out.println("Error occurred while creating pull request for repository: " + repoName);
+                e.printStackTrace();
+            }
+        }
+    }
+}
