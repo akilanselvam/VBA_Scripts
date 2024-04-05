@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Microservices Flow Chart</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+    <style></style>
+  </head>
+  <body>
+    <div class="flex justify-center h-screen">
+      <div id="app" class="container mt-12"></div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const app = document.getElementById("app");
+
+        const jsonData = {
+          services: [
+            { name: "Service 1", level: 1, dependencies: ["Dependency-1", "Dependency 2"] },
+            { name: "Service 2", level: 1, dependencies: ["Dependency 3"] },
+            { name: "Service 3", level: 2, dependencies: ["Dependency 4"] },
+            { name: "Service 4", level: 2, dependencies: [] },
+            { name: "Service 5", level: 3, dependencies: ["Dependency 5"] },
+            { name: "Service 4", level: 4, dependencies: [] },
+            { name: "Service 5", level: 4, dependencies: ["Dependency 5"] }
+          ]
+        };
+
+        function renderMicroservices() {
+          const servicesByLevel = {};
+          jsonData.services.forEach(service => {
+            if (!servicesByLevel[service.level]) {
+              servicesByLevel[service.level] = [];
+            }
+            servicesByLevel[service.level].push(service);
+          });
+
+          Object.entries(servicesByLevel).forEach(([level, services]) => {
+            const row = document.createElement("div");
+            row.classList.add("flex", "justify-center", "space-x-16", "mb-4");
+            services.forEach(service => {
+              const serviceElement = document.createElement("div");
+              serviceElement.classList.add("microservice", "border", "p-4", "relative", "text-center");
+              serviceElement.textContent = service.name;
+
+              const dependencyBox = document.createElement("div");
+              dependencyBox.classList.add(
+                "dependency-info",
+                "absolute",
+                "bg-gray-200",
+                "rounded-md",
+                "p-4",
+                "text-sm",
+                "hidden"
+              );
+              dependencyBox.style.width = "auto";
+
+              dependencyBox.textContent = service.dependencies.join(", ");
+              serviceElement.appendChild(dependencyBox);
+
+              serviceElement.addEventListener("mouseenter", () => {
+                dependencyBox.classList.remove("hidden");
+              });
+
+              serviceElement.addEventListener("mouseleave", () => {
+                dependencyBox.classList.add("hidden");
+              });
+
+              row.appendChild(serviceElement);
+            });
+
+            app.appendChild(row);
+          });
+        }
+
+        renderMicroservices();
+      });
+    </script>
+  </body>
+</html>
