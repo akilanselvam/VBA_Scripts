@@ -1,0 +1,55 @@
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+
+public class JsonRequestGenerator {
+
+    public static void main(String[] args) {
+        // Body JSON provided by the user
+        String bodyJson = "{\n" +
+                "  \"sourceRefName\": \"refs/heads/feature/latest_source_movement_4.1.im\",\n" +
+                "  \"targetRefName\": \"refs/heads/release/ATLAS.4.1.im\",\n" +
+                "  \"title\": \"#1576136 Split Repo Aspect Change 03/04/2024\",\n" +
+                "  \"description\": \"#1576136\",\n" +
+                "  \"workItemRefs\": [{\n" +
+                "    \"id\": \"1576136\"\n" +
+                "  }]\n" +
+                "}";
+
+        // Array of repositories
+        List<String> repositories = Arrays.asList("repo1", "repo2", "repo3");
+
+        // Base URL
+        String baseUrl = "https://iqkli3xzmrjd5Ihnedqqkyxeee7yighao@vph2onijedxgzni6a@dev.azure.com/sc-ado/PDBQPR/_apis/git/repositories/{repo}/pulirequests/api-version=71-preview1";
+
+        // Create JSON structure
+        JsonArray jsonArray = new JsonArray();
+        for (String repo : repositories) {
+            String url = baseUrl.replace("{repo}", repo);
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("url", url);
+            jsonObject.add("body", new Gson().fromJson(bodyJson, JsonObject.class));
+            jsonArray.add(jsonObject);
+        }
+
+        // Pretty print JSON
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String jsonOutput = gson.toJson(jsonArray);
+        System.out.println(jsonOutput);
+
+        // Save JSON to file
+        String filePath = "/path/to/save/json/output.json"; // Update with your desired file path
+        try (FileWriter fileWriter = new FileWriter(filePath)) {
+            fileWriter.write(jsonOutput);
+            System.out.println("JSON saved to file: " + filePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
