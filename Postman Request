@@ -1,0 +1,28 @@
+// Get the log file path from the environment variable
+var logFilePath = pm.environment.get("logFilePath");
+
+// Extract pull request IDs
+var jsResponse = pm.response.json();
+var prIDs = jsResponse.value.map(function(pr) { return pr.pullRequestId; });
+
+// Convert array to a string with comma-separated values
+var logMessage = prIDs.join(", ");
+
+// Append the log message to the file
+pm.sendRequest({
+    url: "file://" + logFilePath,
+    method: 'POST',
+    header: {
+        'Content-Type': 'text/plain'
+    },
+    body: {
+        mode: 'raw',
+        raw: logMessage + '\n'
+    }
+}, function(err, res) {
+    if (err) {
+        console.error("Error writing to file:", err);
+    } else {
+        console.log("Log appended successfully.");
+    }
+});
