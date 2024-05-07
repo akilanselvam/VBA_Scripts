@@ -1,0 +1,23 @@
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+public class DateConverter {
+    public static String convertDateString(String inputDate) {
+        try {
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
+            Date date = inputFormat.parse(inputDate);
+            SimpleDateFormat outputFormat = new SimpleDateFormat("MMMM-yyyy");
+            return outputFormat.format(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null; // Handle parsing exception appropriately
+        }
+    }
+
+    public static void main(String[] args) {
+        String inputDate = "2024-04-05";
+        String convertedDate = convertDateString(inputDate);
+        System.out.println(convertedDate);
+    }
+}
