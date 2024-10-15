@@ -1,0 +1,80 @@
+@Test
+public void testProcessPostAccountCreationAction_Exception1(
+        @Mocked StaticDataCache staticDataCache, 
+        @Mocked CodeCache codeCache,
+        @Mocked ProductEntityHome productEntityHome,
+        @Mocked AccountMasterEntityHome accountMasterEntityHome,
+        @Mocked SubsidiaryAccountWrapper subsidiaryAccountWrapperCloned,
+        @Mocked ProductWrapper productWrapper,
+        @Mocked AccountMasterWrapper masterWrapper) throws Exception {
+
+    // Existing setup before cloning
+    final Object[] nextElemObj = new Object[]{"12345", "INR", "C"};
+    
+    try {
+        Vector<ConsolidatedStatementEntityKey> vector = new Vector<>();
+        vector.addElement(new ConsolidatedStatementEntityKey("stTest", "strest"));
+        
+        new NonStrictExpectations() {{
+            // Simulate validation and getting the next element
+            relationshipSession.validateMaxAccountsAllowed((SubsidiaryAccountWrapper) any, anyString, anyBoolean);
+            result = true;
+
+            eodWrapper.getNextElement();
+            returns(nextElemObj, null);  // Simulates one loop iteration, then null to stop the loop
+
+            consolidatedStatementEntityHome.findByReferenceNo(anyString, anyString);
+            returns(vector.elements(), vector.elements(), vector.elements(), null);
+
+            passbookEntityHome.create((PassbookWrapper) any);
+            result = new Exception(); // Simulate exception during passbook entity creation
+        }};
+        
+        // Additional mocks and expectations after cloning
+        new Expectations() {{
+            // Clone subsidiaryAccountWrapper
+            subsidiaryAccountWrapper.clone();
+            result = subsidiaryAccountWrapperCloned; // Simulate successful clone
+
+            // ProductEntity lookup and getting wrapper
+            productEntityHome.findByPrimaryKey((ProductEntityKey) any);
+            result = new ProductEntity();  // Mock ProductEntity behavior
+
+            productWrapper = productEntityHome.findByPrimaryKey((ProductEntityKey) any).getWrapper();
+            result = productWrapper;
+
+            // AccountMasterEntity lookup and getting wrapper
+            accountMasterEntityHome.findByPrimaryKey((AccountMasterEntityKey) any);
+            result = new AccountMasterEntity();
+
+            masterWrapper = accountMasterEntityHome.findByPrimaryKey((AccountMasterEntityKey) any).getWrapper();
+            result = masterWrapper;
+
+            // Further interactions after cloning
+            postEngineSessionBean.createMASTREL(subsidiaryAccountWrapperCloned, masterWrapper);
+            times = 1; // Ensure createMASTREL is called once
+            
+            postEngineSessionBean.createADVMASTandADVDET(subsidiaryAccountWrapperCloned, masterWrapper);
+            times = 1;
+
+            postEngineSessionBean.createINTDTL(subsidiaryAccountWrapperCloned, masterWrapper);
+            times = 1;
+
+            postEngineSessionBean.createPTRNSTAT(subsidiaryAccountWrapperCloned);
+            times = 1;
+
+            postEngineSessionBean.triggerEvents(subsidiaryAccountWrapperCloned);
+            times = 1;
+        }};
+
+        // Act: Run the method under test
+        postEngineSessionBean.processPostAccountCreationAction(eodWrapper);
+
+        // Assert: Check that no exceptions were thrown and the logic flowed as expected
+        Assert.assertTrue(true);
+        
+    } catch (Exception exobj) {
+        // Fail the test if an exception was thrown unexpectedly
+        fail("Exception not Expected: " + exobj.getMessage());
+    }
+}
