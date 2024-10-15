@@ -1,0 +1,115 @@
+import mockit.*;
+import mockit.integration.junit4.JMockit;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import static org.junit.Assert.*;
+import java.io.PrintStream;
+
+@RunWith(JMockit.class)
+public class PostEngineSessionBeanTest {
+
+    @Tested
+    private PostEngineSessionBean postEngineSessionBean;
+
+    @Injectable
+    private PrintStream out;
+
+    @Injectable
+    private EODWrapper eodWrapper;
+
+    @Injectable
+    private SubsidiaryAccountEntity subsidiaryAccountEntity;
+
+    @Injectable
+    private ProductEntityHome productEntityHome;
+
+    @Injectable
+    private AccountMasterEntityHome accountMasterEntityHome;
+
+    @Injectable
+    private SubsidiaryAccountWrapper subsidiaryAccountWrapper;
+
+    @Injectable
+    private SubsidiaryAccountWrapper subsidiaryAccountWrapperCloned;
+
+    @Injectable
+    private ProductWrapper productWrapper;
+
+    @Injectable
+    private AccountMasterWrapper masterWrapper;
+
+    @Test
+    public void testProcessPostAccountCreationAction_success() throws Exception {
+        // Arrange
+        Object[] obj = new Object[]{"123456", "USD", "C"};
+
+        new Expectations() {{
+            eodWrapper.getNextElement();
+            result = obj; result = null; // loop ends when getNextElement returns null
+
+            subsidiaryAccountEntity.getWrapper();
+            result = subsidiaryAccountWrapper;
+
+            subsidiaryAccountWrapper.clone();
+            result = subsidiaryAccountWrapperCloned;
+
+            productEntityHome.findByPrimaryKey((ProductEntityKey) any);
+            result = new ProductEntity(); // You can mock specific ProductEntity as needed
+
+            accountMasterEntityHome.findByPrimaryKey((AccountMasterEntityKey) any);
+            result = new AccountMasterEntity(); // You can mock specific AccountMasterEntity
+
+            subsidiaryAccountWrapper.accountNo;
+            result = "123456";
+
+            subsidiaryAccountWrapper.currencyCode;
+            result = "USD";
+        }};
+
+        // Act
+        postEngineSessionBean.processPostAccountCreationAction(eodWrapper);
+
+        // Assert
+        new Verifications() {{
+            out.print((String) any);
+            times = 1; // Ensure some logging happened
+
+            subsidiaryAccountEntity.setWrapper(subsidiaryAccountWrapper);
+            times = 1; // Verify wrapper was set once
+        }};
+    }
+
+    @Test
+    public void testProcessPostAccountCreationAction_noRecordsFound() throws Exception {
+        // Arrange
+        new Expectations() {{
+            eodWrapper.getNextElement();
+            result = null; // Simulate no records
+        }};
+
+        // Act
+        postEngineSessionBean.processPostAccountCreationAction(eodWrapper);
+
+        // Assert
+        new Verifications() {{
+            out.print("PostEngineSessionBean processPostAccountCreationAction: No Records Found");
+        }};
+    }
+
+    @Test
+    public void testProcessPostAccountCreationAction_exceptionHandling() throws Exception {
+        // Arrange
+        new Expectations() {{
+            eodWrapper.getNextElement();
+            result = new Exception("Test Exception");
+        }};
+
+        // Act
+        postEngineSessionBean.processPostAccountCreationAction(eodWrapper);
+
+        // Assert
+        new Verifications() {{
+            out.println("PostEngineSessionBean processPostAccountCreationAction: rollback" + any);
+        }};
+    }
+}
