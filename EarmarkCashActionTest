@@ -1,0 +1,18 @@
+import mockit.*;
+import org.junit.*;
+import static org.junit.Assert.*;
+
+public class EarmarkCashActionTest {
+
+    @Tested
+    EarmarkCashAction earmarkCashAction; // The class under test
+
+    @Injectable
+    EarmarkCommonAction earmarkCommonAction; // Parent class
+
+    @Test
+    public void testEarmarkCashActionInstantiation() {
+        // Just instantiate the class and check it's not null
+        assertNotNull(earmarkCashAction);
+    }
+}
