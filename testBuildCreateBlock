@@ -6,6 +6,7 @@ import scb.business.etransaction.wrapper.BlockTransactionWrapper;
 import scb.exception.SCBApplicationException;
 import rcb.business.earmark.service.builder.EarmarkTPSBuilder;
 import rcb.business.earmark.util.EarmarkConstants;
+import scb.ebbs.service.common.ServiceUtil;
 
 public class EarmarkTPSBuilderTest {
 
@@ -15,11 +16,20 @@ public class EarmarkTPSBuilderTest {
     @Injectable
     EarmarkCommonBuilder earmarkCommonBuilder;  // Mock parent class
 
+    @Mocked
+    ServiceUtil serviceUtil;  // Mock ServiceUtil to prevent NPE
+
     @Test
     public void testBuildCreateBlock() throws SCBApplicationException {
         // Create a mock BlockTransactionWrapper
         BlockTransactionWrapper mockWrapper = new BlockTransactionWrapper();
         
+        // Mock the system table data to avoid NPE from ServiceUtil
+        new Expectations() {{
+            ServiceUtil.getSystemTableData(anyString);
+            result = "mockedData"; // Provide mocked data
+        }};
+
         // Define expectations for the call to the parent class method
         new Expectations() {{
             earmarkCommonBuilder.buildCreateBlock(mockWrapper);
