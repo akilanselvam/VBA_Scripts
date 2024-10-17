@@ -1,0 +1,39 @@
+import mockit.*;
+import org.junit.*;
+import static org.junit.Assert.*;
+
+import scb.business.etransaction.wrapper.BlockTransactionWrapper;
+import scb.exception.SCBApplicationException;
+import rcb.business.earmark.service.builder.EarmarkTPSBuilder;
+import rcb.business.earmark.util.EarmarkConstants;
+
+public class EarmarkTPSBuilderTest {
+
+    @Tested
+    EarmarkTPSBuilder earmarkTPSBuilder;  // Class under test
+
+    @Injectable
+    EarmarkCommonBuilder earmarkCommonBuilder;  // Mock parent class
+
+    @Test
+    public void testBuildCreateBlock() throws SCBApplicationException {
+        // Create a mock BlockTransactionWrapper
+        BlockTransactionWrapper mockWrapper = new BlockTransactionWrapper();
+        
+        // Define expectations for the call to the parent class method
+        new Expectations() {{
+            earmarkCommonBuilder.buildCreateBlock(mockWrapper);
+        }};
+
+        // Call the method under test
+        BlockTransactionWrapper result = earmarkTPSBuilder.buildCreateBlock(mockWrapper);
+
+        // Verify that the parent method was called
+        new Verifications() {{
+            earmarkCommonBuilder.buildCreateBlock(mockWrapper); times = 1;
+        }};
+
+        // Verify that the block type was set correctly
+        assertEquals(EarmarkConstants.TPS_BLOCK, result.blockType);
+    }
+}
