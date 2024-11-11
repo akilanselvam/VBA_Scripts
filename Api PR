@@ -30,3 +30,7 @@ for /f "delims=" %%i in ('type repositories.txt') do (
     REM Optionally, you can add a delay to avoid rate limits or other issues
     timeout /t 5 /nobreak
 )
+"My manager has a bold, hands-on approach. She follows through until tasks are completed and ensures everyone takes ownership of their work. Her focus on teaching the business side has significantly deepened my practical understanding, helping me improve and deliver better results. I'm grateful for her guidance"
+
+"I can't think of anything to suggest—they've been truly supportive and effective in their role."
+
