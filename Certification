@@ -1,0 +1,189 @@
+// ./src/Certification.jsx
+import React, { useState } from "react";
+import { SiMicrosoftazure } from "react-icons/si";
+import { SiMongodb } from "react-icons/si";
+import { MdDevicesOther } from "react-icons/md";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import Slider from "react-slick";
+import { GrAchievement } from "react-icons/gr";
+const Certification = () => {
+  const [activeTab, setActiveTab] = useState("tab3");
+
+  const showTab = tabId => {
+    setActiveTab(tabId);
+  };
+
+  return (
+    <div className="mt-8 max-w-md mx-2">
+      {" "}
+      {/* Adjusted max-width and margin */}
+      {/* Tab Buttons */}
+      <div className="p-2 rounded-t-lg">
+        <div className="flex justify-center space-x-4">
+          <button
+            className={`px-8 py-2 text-text font-semibold border-b-4 ${
+              activeTab === "tab1" ? "border-text  text-white" : "border-text "
+            } focus:outline-none`}
+            onClick={() => showTab("tab1")}>
+            <SiMicrosoftazure className="h-7 w-7" />{" "}
+          </button>
+          <button
+            className={`px-8 py-2 text-text  font-semibold border-b-4 ${
+              activeTab === "tab2" ? "border-text  text-white" : "border-text "
+            } focus:outline-none`}
+            onClick={() => showTab("tab2")}>
+            <SiMongodb className="h-7 w-7" />{" "}
+          </button>
+          <button
+            className={`px-8 py-2 text-text font-semibold border-b-4 ${
+              activeTab === "tab3" ? "border-text  text-white" : "border-text "
+            } focus:outline-none`}
+            onClick={() => showTab("tab3")}>
+            <MdDevicesOther className="h-7 w-7" />{" "}
+          </button>
+        </div>
+      </div>
+      {/* Tab Content */}
+      <div id="tab1" className={`p-4 tab-content shadow-md  rounded-lg ${activeTab !== "tab1" && "hidden"}`}>
+        <div className="border border-text rounded-lg my-2 p-2">
+          <a href="https://www.credly.com/badges/926b8ca6-15e9-4bb8-bc42-78c6f11ed37e/public_url">
+            <p className="text-center text-sm text-text">AZ-400 (DevOps Engineer Expert)</p>
+          </a>
+        </div>
+        <div className="border border-text rounded-lg my-2 p-2">
+          <a href="https://www.credly.com/badges/05cfc685-103a-4a11-9ecd-d8d85b77bf8a/public_url">
+            <p className="text-center text-sm text-text">AZ-204 (Azure Developer Associate)</p>
+          </a>
+        </div>
+        <div className="border border-text rounded-lg my-2 p-2">
+          <a href="https://www.credly.com/badges/ce68d2dc-cdbb-4ae1-95cb-86078de98060/public_url">
+            <p className="text-center text-sm text-text">AZ-900 (Azure Fundamentals)</p>
+          </a>
+        </div>
+        <div className="border border-text rounded-lg my-2 p-2">
+          <a href="https://www.credly.com/badges/4a73a07c-4435-4172-b6d1-e67548b15814/public_url">
+            <p className="text-center text-sm text-text">DP-900 (Azure Data Fundamentals)</p>
+          </a>
+        </div>
+      </div>
+      <div id="tab2" className={`p-4 tab-content  shadow-md  rounded-lg ${activeTab !== "tab2" && "hidden"}`}>
+        <div className="border border-text rounded-lg my-2 p-2">
+          <a href="https://university.mongodb.com/course_completion/a516e3db-186e-4c3a-9442-ab7d6899ddaa/printable?format=img">
+            <p className="text-center text-sm text-text">M220J (MongoDB for Java Developers)</p>
+          </a>
+        </div>
+        <div className="border border-text text-sm rounded-lg my-2 p-2">
+          <a href="https://university.mongodb.com/course_completion/2fefd522-60b5-4b38-a3c4-9b2177be00ce/printable?format=img">
+            <p className="text-center text-text">M001 (MongoDB Basics)</p>
+          </a>
+        </div>
+      </div>
+      <div id="tab3" className={`p-4 tab-content  shadow-md  rounded-lg ${activeTab !== "tab3" && "hidden"}`}>
+        <div className="border border-text text-sm rounded-lg my-2 p-2">
+          <a href="https://www.udemy.com/certificate/UC-39ef8736-08a9-4646-b450-2ffaa9c71f45/">
+            <p className="text-center text-text">Node.js, Express, MongoDB & More: The Complete Bootcamp 2022</p>
+          </a>
+        </div>
+        <div className="border border-text rounded-lg text-sm my-2 p-2">
+          <a href="https://www.udemy.com/certificate/UC-e9710687-62d9-486b-b03a-18332594ff69/">
+            <p className="text-center text-text">AWS Essentials</p>
+          </a>
+        </div>
+        <div className="border border-text text-sm rounded-lg my-2 p-2">
+          <a href="https://www.udemy.com/certificate/UC-ebec842e-41e2-46f8-81c3-2f62aa03ad37/">
+            <p className="text-center text-text">The Complete Agile Scrum Fundamentals Course</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Achievement = () => {
+  const [activeTab, setActiveTab] = useState("tab3");
+
+  const showTab = tabId => {
+    setActiveTab(tabId);
+  };
+
+  const settings = {
+    dots: true,
+    infinite: true,
+    speed: 2000,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 5000, // 1 second
+    arrows: false, // Remove navigation buttons
+    fade: true // Enable fade effect
+  };
+
+  return (
+    <div className="sm:mt-0 lg:mt-8  max-w-md mx-2">
+      <div className="p-2 rounded-t-lg">
+        <div className="flex justify-center space-x-4">
+          <button
+            className={`px-8 py-2 text-text font-semibold border-b-4 ${
+              activeTab === "tab3" ? "border-text text-white" : "border-text"
+            } focus:outline-none`}
+            onClick={() => showTab("tab3")}>
+            <GrAchievement className="h-7 w-7" />
+          </button>
+        </div>
+      </div>
+      <div
+        id="tab3"
+        className={`p-4 lg:mx-8 sm:mx-0  tab-content shadow-md rounded-lg ${activeTab !== "tab3" && "hidden"}`}>
+        <Slider {...settings}>
+          <div className="border border-text rounded-lg my-2 p-2 ">
+            <a href="https://www.udemy.com/certificate/UC-39ef8736-08a9-4646-b450-2ffaa9c71f45/">
+              <p className="text-center text-text text-sm">AI-Driven Data Categorization:</p>
+              <hr class="w-48 h-0.5 mx-auto  bg-background border-0 rounded my-2 " />
+              <p className="text-justify text-text text-xs">
+                Developed a application that uses a fine-tuned BERT model to categorize data. Leveraged a Kaggle dataset
+                for training and deployed the model on Hugging Face for real-time classification through API calls. This
+                solution enhances data organization and system intelligence with cutting-edge AI.
+              </p>
+            </a>
+          </div>
+          <div className="border border-text rounded-lg my-2 p-2">
+            <a href="https://www.udemy.com/certificate/UC-e9710687-62d9-486b-b03a-18332594ff69/">
+              <p className="text-center text-text text-sm">Modernized Legacy System</p>
+              <hr class="w-48 h-0.5 mx-auto  bg-background border-0 rounded my-2 " />
+              <p className="text-justify text-text text-xs">
+                Transformed a monolithic application into microservices, deployed on Azure DevOps. Achieved seamless
+                integration, reduced build time, and automated the process with custom pipeline scripts, ensuring a
+                robust MVC architecture and eliminating hard-coded dependencies.
+              </p>
+            </a>
+          </div>
+          {/*  <div className="border border-text rounded-lg my-2 p-2">
+            <a href="https://www.udemy.com/certificate/UC-ebec842e-41e2-46f8-81c3-2f62aa03ad37/">
+              <p className="text-center text-text text-sm">AI-Driven Data Categorization:</p>
+              <hr class="w-48 h-0.5 mx-auto  bg-background border-0 rounded my-2 " />
+              <p className="text-justify text-text text-xs">
+                Developed a full-stack application that uses a fine-tuned BERT model to categorize data. Leveraged a
+                Kaggle dataset for training and deployed the model on Hugging Face for real-time classification through
+                API calls. This solution enhances data organization and system intelligence with cutting-edge AI.
+              </p>
+            </a>
+          </div>
+          */}
+        </Slider>
+      </div>
+    </div>
+  );
+};
+
+const CertificationContainer = () => {
+  return (
+    <sectio id="certificationContainer" className="lg:flex lg:flex-wrap lg:justify-center sm:space-x-0 lg:space-x-16">
+      {" "}
+      <Certification />
+      <Achievement />
+    </sectio>
+  );
+};
+
+export default CertificationContainer;
