@@ -1,0 +1,50 @@
+const express = require('express');
+const app = express();
+const port = 8080;
+
+// Middleware to parse JSON and URL-encoded bodies
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// POST /api/accounts - Create an account
+app.post('/api/accounts', (req, res) => {
+  const { accountNumber, status } = req.body;
+
+  if (!accountNumber || !status) {
+    return res.status(400).json({ error: 'accountNumber and status are required' });
+  }
+
+  // Dummy response for account creation
+  const dummyResponse = {
+    message: 'Account created successfully',
+    accountNumber,
+    status,
+    timestamp: new Date().toISOString(),
+  };
+
+  res.status(201).json(dummyResponse);
+});
+
+// POST /api/accounts/invokeSyncAsync - Invoke sync/async
+app.post('/api/accounts/invokeSyncAsync', (req, res) => {
+  const { accountNumber } = req.body;
+
+  if (!accountNumber) {
+    return res.status(400).json({ error: 'accountNumber is required' });
+  }
+
+  // Dummy response for sync/async invocation
+  const dummyResponse = {
+    message: 'Sync/Async invoked successfully',
+    accountNumber,
+    result: 'SUCCESS',
+    timestamp: new Date().toISOString(),
+  };
+
+  res.status(200).json(dummyResponse);
+});
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+});
